@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:17.5
+    restart: on-failure
+    ports:
+      - '${DB_PORT}:5432'
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # ===== REDIS DURABLE SERVICE =====
+  redis-durable:
+    image: redis:8.2.1
+    restart: on-failure
+    ports:
+      - "${REDIS_DURABLE_HOST_PORT}:6379"
+    volumes:
+      # 1) We connect our config (Readonly)
+      - ./infra/redis/redis-durable.conf:/usr/local/etc/redis/redis.conf:ro
+      # 2) Volume for data (AOF/RDB)
+      - redis_data:/data
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
+volumes:
+  redis_data:
+  postgres_data:

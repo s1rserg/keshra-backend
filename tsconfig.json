@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+
+    // Stricter Typechecking Options
+    "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false,
+    "resolveJsonModule": true,
+    "noImplicitReturns": true,
+    "useUnknownInCatchVariables": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": false,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "strictPropertyInitialization": false,
+    "moduleDetection": "force",
+    "paths": {
+      "@infrastructure/*": ["src/infrastructure/*", "src/infrastructure/*/index.ts"],
+      "@app/*": ["src/app/*", "src/app/*/index.ts"],
+      "@common/*": ["src/common/*"],
+      "@modules/*": ["src/modules/*", "src/modules/*/index.ts"],
+      "@swagger-decorators/*": ["src/common/decorators/swagger-api/*"],
+    }
+  }
+}

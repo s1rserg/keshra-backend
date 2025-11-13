@@ -1,0 +1,42 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { EntityManager } from 'typeorm';
+
+import type { Nullable } from '@common/types';
+
+import type { Chat, UpdateLastMessagePayload } from '../types';
+import { ChatAccessService } from './chat-access.service';
+import { ChatRepository } from '../repositories/chat.repository';
+
+@Injectable()
+export class OuterChatService {
+  constructor(
+    private readonly chatRepository: ChatRepository,
+    private readonly chatAccessService: ChatAccessService,
+  ) {}
+
+  async findByIdOrThrow(id: number): Promise<Chat> {
+    const chat = await this.chatRepository.findById(id);
+    if (!chat) throw new NotFoundException(`Chat not found`);
+
+    return chat;
+  }
+
+  async findByIdOrNull(id: number): Promise<Nullable<Chat>> {
+    return this.chatRepository.findById(id);
+  }
+
+  async updateLastMessageInfo(
+    payload: UpdateLastMessagePayload,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const updateResult = await this.chatRepository.updateLastMessageInfo(payload, manager);
+
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`Can not update last message info in chat.`);
+    }
+  }
+
+  checkUserAccessToChat(userId: number, chat: Chat): boolean {
+    return this.chatAccessService.checkUserAccessToChat(userId, chat);
+  }
+}
