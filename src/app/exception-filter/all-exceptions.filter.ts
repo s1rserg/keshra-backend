@@ -20,7 +20,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
   }
 
   catch(exception: unknown, host: ArgumentsHost) {
-    console.error(exception);
     const candidate = this.exceptionHandlers.find(({ type }) => exception instanceof type);
 
     if (candidate) {

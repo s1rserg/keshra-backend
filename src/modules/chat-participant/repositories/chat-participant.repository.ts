@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { type EntityManager, In, Not, Repository } from 'typeorm';
 
+import { Nullable } from '@common/types';
+
 import type { ChatParticipant, ChatParticipantWithUser, PrivateChatTitleDto } from '../types';
 import type { CreateChatParticipantDto } from '../dto/create-chat-participant.dto';
 import { ChatParticipantEntity } from '../entities/chat-participant.entity';
@@ -34,6 +36,14 @@ export class ChatParticipantRepository {
     });
 
     return participants.map(toChatParticipantMapper);
+  }
+
+  async findByChatIdAndUserId(chatId: number, userId: number): Promise<Nullable<ChatParticipant>> {
+    const participant = await this.chatParticipantRepository.findOne({
+      where: { chatId, userId },
+    });
+
+    return participant ? toChatParticipantMapper(participant) : null;
   }
 
   async findPrivateChatsTitle(

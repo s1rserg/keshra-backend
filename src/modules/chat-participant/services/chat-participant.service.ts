@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
 
+import { Nullable } from '@common/types';
+
 import type { ChatParticipant, ChatParticipantWithUser, PrivateChatTitleDto } from '../types';
 import type { CreateChatParticipantDto } from '../dto/create-chat-participant.dto';
 import { ChatParticipantRepository } from '../repositories/chat-participant.repository';
@@ -11,6 +13,10 @@ export class ChatParticipantService {
 
   async findByUserId(userId: number): Promise<ChatParticipant[]> {
     return this.chatParticipantRepository.findByUserId(userId);
+  }
+
+  async findByChatIdAndUserId(chatId: number, userId: number): Promise<Nullable<ChatParticipant>> {
+    return this.chatParticipantRepository.findByChatIdAndUserId(chatId, userId);
   }
 
   async create(

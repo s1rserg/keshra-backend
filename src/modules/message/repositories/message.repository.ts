@@ -26,10 +26,14 @@ export class MessageRepository {
     const messages = await this.messageRepository.find({
       where: { chatId, ...cursorWhereOptions },
       take: limit,
+      order: {
+        createdAt: 'DESC',
+        id: 'DESC',
+      },
       relations: { author: true },
     });
 
-    return messages.map(toMessageWithAuthorMapper);
+    return messages.reverse().map(toMessageWithAuthorMapper);
   }
 
   async findOneById(id: number, manager?: EntityManager): Promise<Nullable<MessageWithAuthor>> {

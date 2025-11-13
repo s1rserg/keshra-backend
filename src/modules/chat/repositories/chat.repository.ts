@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { type EntityManager, In, Repository, type UpdateResult } from 'typeorm';
+import { type EntityManager, In, Like, Repository, type UpdateResult } from 'typeorm';
 
 import type { Nullable } from '@common/types';
 
@@ -13,6 +13,7 @@ import type {
   PublicChat,
   UpdateLastMessagePayload,
 } from '../types';
+import { ChatType } from '../enums/chat-type.enum';
 import { ChatEntity } from '../entities/chat.entity';
 import { toChatMapper } from '../mappers/to-chat.mapper';
 import { toPrivateChatMapper } from '../mappers/to-private-chat.mapper';
@@ -24,6 +25,18 @@ export class ChatRepository {
     @InjectRepository(ChatEntity)
     private readonly chatRepository: Repository<ChatEntity>,
   ) {}
+
+  async searchPublicChatsByTitle(query: string): Promise<PublicChat[]> {
+    const chats = await this.chatRepository.find({
+      where: {
+        title: Like(`${query}%`),
+        type: ChatType.PUBLIC,
+      },
+      order: { title: 'ASC' },
+      take: 20,
+    });
+    return chats.map(toPublicChatMapper);
+  }
 
   async findByIds(ids: number[]): Promise<Chat[]> {
     const chats = await this.chatRepository.find({ where: { id: In(ids) } });
