@@ -48,6 +48,13 @@ export class ChatService {
     });
   }
 
+  async searchPublicChats(query?: string): Promise<PublicChat[]> {
+    if (!query || query.trim().length === 0) {
+      return [];
+    }
+    return this.chatRepository.searchPublicChatsByTitle(query);
+  }
+
   async createPublicChat(
     createPublicChatDto: CreatePublicChatDto,
     user: ActiveUser,
@@ -122,5 +129,32 @@ export class ChatService {
     }
 
     return { ...chat, participants: chatUsers, title: chatTitle! };
+  }
+
+  async joinPublicChat(chatId: number, user: ActiveUser): Promise<ChatWithParticipants> {
+    const chat = await this.chatRepository.findById(chatId);
+    if (!chat) {
+      throw new NotFoundException(`Chat not found`);
+    }
+
+    if (chat.type !== ChatType.PUBLIC) {
+      throw new ForbiddenException('You can only join public chats.');
+    }
+
+    const existingParticipant = await this.chatParticipantService.findByChatIdAndUserId(
+      chat.id,
+      user.id,
+    );
+
+    if (existingParticipant) {
+      throw new ConflictException('You are already a member of this chat');
+    }
+
+    await this.chatParticipantService.create({
+      chatId: chat.id,
+      userId: user.id,
+    });
+
+    return this.findById(chatId, user);
   }
 }

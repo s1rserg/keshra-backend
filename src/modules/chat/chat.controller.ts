@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
 
 import type { ActiveUser } from '@common/types';
@@ -10,6 +10,7 @@ import { RequestUser } from '@common/decorators/active-user.decorator';
 
 import type { CreatePrivateChatDto } from './dto/create-private-chat.dto';
 import type { CreatePublicChatDto } from './dto/create-public-chat.dto';
+import { GetPublicChatsQueryDto } from './dto/get-public-chats-query.dto';
 import { ChatService } from './services/chat.service';
 import { TransformChatToInstance } from './decorators/transform-chat.decorator';
 import { TransformChatDetailsToInstance } from './decorators/transform-chat-details.decorator';
@@ -31,6 +32,15 @@ export class ChatController {
   @TransformChatListToInstance()
   async findMy(@RequestUser() user: ActiveUser) {
     return this.chatService.findUserChats(user);
+  }
+
+  @Get('/public')
+  @ApiOkResponse({
+    schema: { $ref: getSchemaPath(PublicChatResponseDto) },
+  })
+  @TransformChatListToInstance()
+  async searchPublicChats(@Query() query: GetPublicChatsQueryDto) {
+    return this.chatService.searchPublicChats(query.search);
   }
 
   @Post('/public')
@@ -60,5 +70,12 @@ export class ChatController {
   @TransformChatDetailsToInstance()
   async getById(@RequestUser() user: ActiveUser, @Param('id', ParseIntPipe) id: number) {
     return this.chatService.findById(id, user);
+  }
+
+  @Post(':id/join')
+  @ApiCreatedResponse({ type: ChatDetailsResponseDto })
+  @TransformChatDetailsToInstance()
+  async joinPublicChat(@RequestUser() user: ActiveUser, @Param('id', ParseIntPipe) id: number) {
+    return this.chatService.joinPublicChat(id, user);
   }
 }
