@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
 
-import type { Nullable } from '@common/types';
+import { Media, UserAvatarService } from '@modules/media';
+
+import type { FileUpload, Nullable } from '@common/types';
 import { DbErrorParser } from '@common/utils/db-error-parser';
 import type { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
-import type { User } from '../types';
+import type { User, UserWithAvatar } from '../types';
 import type { CreateUserDto } from '../dto/create-user.dto';
 import type { GetAllUsersQueryDto } from '../dto/get-all-users-query.dto';
 import type { UpdateUserDto } from '../dto/update-user.dto';
@@ -13,7 +15,10 @@ import { UserRepository } from '../repositories/user.repository';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userAvatarService: UserAvatarService,
+  ) {}
 
   async create(createUserDto: CreateUserDto, manager?: EntityManager): Promise<User> {
     try {
@@ -32,13 +37,18 @@ export class UserService {
     return users;
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: number): Promise<UserWithAvatar> {
     const user = await this.userRepository.findOne('id', id);
     if (!user) {
       throw new NotFoundException(`User not found`);
     }
 
-    return user;
+    const avatar = await this.userAvatarService.findMainAvatar(id);
+
+    return {
+      ...user,
+      avatar,
+    };
   }
 
   async findOneByEmailOrNull(email: string): Promise<Nullable<User>> {
@@ -49,13 +59,18 @@ export class UserService {
     return this.userRepository.findOneByUsername(username);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<UserWithAvatar> {
     const user = await this.userRepository.update(id, updateUserDto);
     if (!user) {
       throw new NotFoundException(`User not found`);
     }
 
-    return user;
+    const avatar = await this.userAvatarService.findMainAvatar(user.id);
+
+    return {
+      ...user,
+      avatar,
+    };
   }
 
   async remove(id: number): Promise<MessageApiResponseDto> {
@@ -66,5 +81,21 @@ export class UserService {
     }
 
     return { message: `User was successfully deleted` };
+  }
+
+  async uploadAvatar(userId: number, file: FileUpload): Promise<Media> {
+    return this.userAvatarService.createAvatar(userId, file);
+  }
+
+  async getAllUserAvatars(userId: number): Promise<Media[]> {
+    return this.userAvatarService.getAllAvatars(userId);
+  }
+
+  async setUserMainAvatar(userId: number, mediaId: number): Promise<Media> {
+    return this.userAvatarService.setMainAvatar(userId, mediaId);
+  }
+
+  async deleteUserAvatar(userId: number, mediaId: number): Promise<MessageApiResponseDto> {
+    return this.userAvatarService.deleteAvatar(userId, mediaId);
   }
 }

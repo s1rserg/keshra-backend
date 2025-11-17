@@ -25,6 +25,15 @@ export const envValidationSchema = Joi.object({
   WS_PING_INTERVAL: Joi.number().required(),
   WS_PING_TIMEOUT: Joi.number().required(),
 
+  // ! CLOUDINARY
+  CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+  CLOUDINARY_API_KEY: Joi.string().required(),
+  CLOUDINARY_API_SECRET: Joi.string().required(),
+
+  // ! GC
+  MEDIA_GC_SCHEDULE: Joi.string().required(),
+  MEDIA_GC_RETRY_SCHEDULE: Joi.string().required(),
+
   // ! Redis
   REDIS_DURABLE_HOST_PORT: Joi.number().required(),
   REDIS_DURABLE_USER: Joi.string().required(),

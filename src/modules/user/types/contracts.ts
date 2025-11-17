@@ -1,3 +1,5 @@
+import { Media } from '@modules/media';
+
 import type { Nullable } from '@common/types';
 
 export interface User {
@@ -8,4 +10,8 @@ export interface User {
   username: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UserWithAvatar extends User {
+  avatar: Nullable<Media>;
 }

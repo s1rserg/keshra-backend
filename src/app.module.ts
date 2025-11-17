@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { ExceptionFilterModule } from '@app/exception-filter';
 import { AppConfigModule } from '@infrastructure/app-config';
@@ -12,6 +13,7 @@ import { UserModule } from '@modules/user';
 
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { AppController } from './app.controller';
     ChatModule,
     MessageModule,
     RealtimeModule,
+    MediaModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],
