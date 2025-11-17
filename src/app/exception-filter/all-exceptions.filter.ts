@@ -20,6 +20,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
   }
 
   catch(exception: unknown, host: ArgumentsHost) {
+    // eslint-disable-next-line no-console
+    console.error(exception);
     const candidate = this.exceptionHandlers.find(({ type }) => exception instanceof type);
 
     if (candidate) {
