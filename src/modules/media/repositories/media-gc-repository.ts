@@ -25,8 +25,10 @@ export class MediaGcRepository {
         '${MediaGcStatus.PENDING}' AS status
       FROM media m
       LEFT JOIN user_media um ON um.media_id = m.id
+      LEFT JOIN chat_media cm ON cm.media_id = m.id
       LEFT JOIN media_gc mgc ON mgc.media_id = m.id
       WHERE um.media_id IS NULL
+        AND cm.media_id IS NULL
         AND mgc.media_id IS NULL
       ON CONFLICT (media_id) DO NOTHING
       RETURNING *;

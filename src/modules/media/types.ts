@@ -39,6 +39,35 @@ export interface UserMedia {
   updatedAt: Date;
 }
 
+// Chat media
+
+export enum ChatMediaRole {
+  AVATAR = 'AVATAR',
+}
+
+export interface ChatMedia {
+  id: number;
+  role: ChatMediaRole;
+  isMain: boolean;
+  chatId: number;
+  mediaId: number;
+  media: Nullable<Media>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type CreateChatMediaDto = {
+  chatId: number;
+  mediaId: number;
+  role: ChatMediaRole;
+  isMain: boolean;
+};
+
+export type UpdateChatMediaDto = {
+  mediaId?: number;
+  isMain?: boolean;
+};
+
 //CLOUDINARY
 
 export type CloudinaryUploadResult = CreateMediaDto;

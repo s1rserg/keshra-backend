@@ -3,6 +3,10 @@ import { Exclude, Expose } from 'class-transformer';
 
 import type { ChatType } from '@modules/chat';
 
+import { Nullable } from '@common/types';
+
+import { ChatMediaResponseDto } from './chat-media-response.dto';
+
 @Exclude()
 export class PublicChatListResponseDto {
   @ApiProperty()
@@ -16,6 +20,10 @@ export class PublicChatListResponseDto {
   @ApiProperty()
   @Expose()
   type: ChatType;
+
+  @Expose()
+  @ApiProperty({ type: ChatMediaResponseDto, nullable: true })
+  avatar: Nullable<ChatMediaResponseDto>;
 
   @ApiProperty()
   @Expose()
