@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
-import { FileUpload } from '@common/types';
+import { FileUpload, NonEmptyArray } from '@common/types';
 import { Nullable } from '@common/types';
 import { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
@@ -65,9 +65,7 @@ export class ChatAvatarService {
     return avatarLinks.map((link) => link.media!);
   }
 
-  async getAvatarsByChatIds(chatIds: number[]): Promise<Record<number, Media>> {
-    if (chatIds.length === 0) return {};
-
+  async getAvatarsByChatIds(chatIds: NonEmptyArray<number>): Promise<Record<number, Media>> {
     const chatMedias = await this.chatMediaRepository.findAllMainByChatIds(
       chatIds,
       ChatMediaRole.AVATAR,

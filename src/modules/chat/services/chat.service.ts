@@ -8,7 +8,7 @@ import {
 import { ChatParticipantService } from '@modules/chat-participant';
 import { ChatAvatarService, Media } from '@modules/media';
 
-import type { ActiveUser, FileUpload } from '@common/types';
+import type { ActiveUser, FileUpload, NonEmptyArray } from '@common/types';
 import { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
 import {
@@ -40,7 +40,11 @@ export class ChatService {
     const chatIds = participants.map((participant) => participant.chatId);
     const chatArray = await this.chatRepository.findByIds(chatIds);
 
-    const avatarsMap = await this.chatAvatarService.getAvatarsByChatIds(chatArray.map((c) => c.id));
+    if (chatArray.length === 0) return [];
+
+    const avatarsMap = await this.chatAvatarService.getAvatarsByChatIds(
+      chatArray.map((c) => c.id) as NonEmptyArray<number>,
+    );
 
     const privateChatsIds = chatArray.filter((chat) => isPrivateChat(chat)).map((chat) => chat.id);
     const titlesMap = await this.chatParticipantService.findPrivateChatsTitle(
@@ -70,7 +74,9 @@ export class ChatService {
     }
 
     const chatIds = chats.map((chat) => chat.id);
-    const avatarsMap = await this.chatAvatarService.getAvatarsByChatIds(chatIds);
+    const avatarsMap = await this.chatAvatarService.getAvatarsByChatIds(
+      chatIds as NonEmptyArray<number>,
+    );
 
     return chats.map((chat) => ({
       ...chat,
