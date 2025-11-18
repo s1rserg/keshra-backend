@@ -1,4 +1,5 @@
 import type { ChatParticipantWithUser } from '@modules/chat-participant';
+import { Media } from '@modules/media';
 
 import type { Nullable } from '@common/types';
 
@@ -26,10 +27,14 @@ export interface PublicChat extends PublicChatOmit {
   type: ChatType.PUBLIC;
 }
 
+export type PublicChatWithAvatar = PublicChat & { avatar: Nullable<Media> };
+
 export interface PrivateChat extends ChatBase {
   type: ChatType.DIRECT_MESSAGES;
   dmKey: string;
 }
 
 export type Chat = PublicChat | PrivateChat;
+export type ChatWithAvatar = Chat & { avatar: Nullable<Media> };
 export type ChatWithParticipants = Chat & { participants: ChatParticipantWithUser[] };
+export type ChatDetailsWithAvatar = ChatWithParticipants & { avatar: Nullable<Media> };
