@@ -1,4 +1,4 @@
-import type { ChatParticipantBase, PrivateChatTitleDto } from '../types';
+import type { ChatParticipantBase, PrivateChatIdTitleDto } from '../types';
 
 type ParticipantLike = {
   id: number;
@@ -6,10 +6,10 @@ type ParticipantLike = {
   user: Pick<ChatParticipantBase['user'], 'id' | 'username'>;
 };
 
-export const toPrivateChatTitleMapper = (
+export const toPrivateChatIdTitleMapper = (
   participantLike: ParticipantLike[],
-): PrivateChatTitleDto => {
-  return participantLike.reduce<PrivateChatTitleDto>((acc, participant) => {
+): PrivateChatIdTitleDto => {
+  return participantLike.reduce<PrivateChatIdTitleDto>((acc, participant) => {
     if (!participant.user.username) {
       throw new Error(`User ${participant.id} has no user.username.`);
     }
@@ -18,7 +18,10 @@ export const toPrivateChatTitleMapper = (
       throw new Error(`Participant ${participant.id} has no chatId.`);
     }
 
-    acc[participant.chatId] = participant.user.username;
+    acc[participant.chatId] = {
+      title: participant.user.username,
+      userId: participant.user.id,
+    };
     return acc;
   }, {});
 };

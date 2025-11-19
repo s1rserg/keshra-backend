@@ -4,12 +4,12 @@ import { type EntityManager, In, Not, Repository } from 'typeorm';
 
 import { Nullable } from '@common/types';
 
-import type { ChatParticipant, ChatParticipantWithUser, PrivateChatTitleDto } from '../types';
+import type { ChatParticipant, ChatParticipantWithUser, PrivateChatIdTitleDto } from '../types';
 import type { CreateChatParticipantDto } from '../dto/create-chat-participant.dto';
 import { ChatParticipantEntity } from '../entities/chat-participant.entity';
 import { toChatParticipantMapper } from '../mappers/to-chat-participant.mapper';
 import { toChatParticipantWithUser } from '../mappers/to-chat-participant-with-user.mapper';
-import { toPrivateChatTitleMapper } from '../mappers/to-private-chat-title.mapper';
+import { toPrivateChatIdTitleMapper } from '../mappers/to-private-chat-id-title.mapper';
 
 @Injectable()
 export class ChatParticipantRepository {
@@ -50,7 +50,7 @@ export class ChatParticipantRepository {
     chatsIds: number[],
     userId: number,
     manager?: EntityManager,
-  ): Promise<PrivateChatTitleDto> {
+  ): Promise<PrivateChatIdTitleDto> {
     const repository = this.getRepository(manager);
 
     const chats = await repository.find({
@@ -60,12 +60,13 @@ export class ChatParticipantRepository {
         id: true,
         chatId: true,
         user: {
+          id: true,
           username: true,
         },
       },
     });
 
-    return toPrivateChatTitleMapper(chats);
+    return toPrivateChatIdTitleMapper(chats);
   }
 
   async findChatUsers(chatId: number): Promise<ChatParticipantWithUser[]> {
