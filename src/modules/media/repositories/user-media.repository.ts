@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, EntityManager, Repository } from 'typeorm';
+import { DeleteResult, EntityManager, In, Repository } from 'typeorm';
 
 import { Nullable } from '@common/types';
 
@@ -73,6 +73,24 @@ export class UserMediaRepository {
       relations: { media: true },
     });
     return userMedia ? toUserMediaMapper(userMedia) : null;
+  }
+
+  async findAllMainByUserIds(
+    userIds: number[],
+    role: UserMediaRole,
+    manager?: EntityManager,
+  ): Promise<UserMedia[]> {
+    const repository = this.getRepository(manager);
+    const userMedia = await repository.find({
+      where: {
+        userId: In(userIds),
+        role,
+        isMain: true,
+      },
+      relations: { media: true },
+    });
+
+    return userMedia.map((um) => toUserMediaMapper(um));
   }
 
   async create(userMedia: CreateUserMediaDto, manager?: EntityManager): Promise<UserMedia> {

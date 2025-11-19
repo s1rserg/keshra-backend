@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
-import { FileUpload } from '@common/types';
+import { FileUpload, NonEmptyArray } from '@common/types';
 import { Nullable } from '@common/types';
 import { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
@@ -63,6 +63,23 @@ export class UserAvatarService {
       UserMediaRole.AVATAR,
     );
     return avatarLinks.map((link) => link.media!);
+  }
+
+  async getAvatarsByUserIds(userIds: NonEmptyArray<number>): Promise<Record<number, Media>> {
+    const userMedias = await this.userMediaRepository.findAllMainByUserIds(
+      userIds,
+      UserMediaRole.AVATAR,
+    );
+
+    const avatarMap: Record<number, Media> = {};
+
+    userMedias.forEach((um) => {
+      if (um.media) {
+        avatarMap[um.userId] = um.media;
+      }
+    });
+
+    return avatarMap;
   }
 
   async setMainAvatar(userId: number, mediaIdToMakeMain: number): Promise<Media> {

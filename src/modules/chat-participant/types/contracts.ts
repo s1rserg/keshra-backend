@@ -14,7 +14,7 @@ export interface ChatParticipantBase {
 
 export type ChatParticipant = Omit<ChatParticipantBase, 'chat' | 'user'>;
 
-export type PrivateChatTitleDto = Record<number, string>;
+export type PrivateChatIdTitleDto = Record<number, { title: string; userId: number }>;
 
 export interface ChatParticipantWithUser
   extends Pick<ChatParticipantBase, 'id' | 'joinedAt' | 'user'> {}

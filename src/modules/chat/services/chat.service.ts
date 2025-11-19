@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 
 import { ChatParticipantService } from '@modules/chat-participant';
-import { ChatAvatarService, Media } from '@modules/media';
+import { ChatAvatarService, Media, UserAvatarService } from '@modules/media';
 
-import type { ActiveUser, FileUpload, NonEmptyArray } from '@common/types';
+import type { ActiveUser, FileUpload, NonEmptyArray, Nullable } from '@common/types';
 import { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
 import {
@@ -33,6 +33,7 @@ export class ChatService {
     private readonly chatParticipantService: ChatParticipantService,
     private readonly chatAccessService: ChatAccessService,
     private readonly chatAvatarService: ChatAvatarService,
+    private readonly userAvatarService: UserAvatarService,
   ) {}
 
   async findUserChats(user: ActiveUser): Promise<ChatWithAvatar[]> {
@@ -42,22 +43,45 @@ export class ChatService {
 
     if (chatArray.length === 0) return [];
 
-    const avatarsMap = await this.chatAvatarService.getAvatarsByChatIds(
-      chatArray.map((c) => c.id) as NonEmptyArray<number>,
-    );
+    const publicChatIds = chatArray.filter((c) => !isPrivateChat(c)).map((c) => c.id);
+
+    let chatAvatarsMap: Record<number, Media> = {};
+    if (publicChatIds.length > 0) {
+      chatAvatarsMap = await this.chatAvatarService.getAvatarsByChatIds(
+        publicChatIds as NonEmptyArray<number>,
+      );
+    }
 
     const privateChatsIds = chatArray.filter((chat) => isPrivateChat(chat)).map((chat) => chat.id);
-    const titlesMap = await this.chatParticipantService.findPrivateChatsTitle(
-      privateChatsIds,
-      user.id,
-    );
+
+    let privateChatDetails: Record<number, { title: string; userId: number }> = {};
+    let userAvatarsMap: Record<number, Media> = {};
+
+    if (privateChatsIds.length > 0) {
+      privateChatDetails = await this.chatParticipantService.findPrivateChatsTitle(
+        privateChatsIds,
+        user.id,
+      );
+
+      const partnerUserIds = Object.values(privateChatDetails).map((d) => d.userId);
+
+      if (partnerUserIds.length > 0) {
+        userAvatarsMap = await this.userAvatarService.getAvatarsByUserIds(
+          partnerUserIds as NonEmptyArray<number>,
+        );
+      }
+    }
 
     return chatArray.map((chat) => {
-      const avatar = avatarsMap[chat.id] || null;
       if (!isPrivateChat(chat)) {
-        return { ...chat, avatar };
+        return { ...chat, avatar: chatAvatarsMap[chat.id] || null };
       }
-      const title = titlesMap[chat.id] || 'User deleted';
+
+      const details = privateChatDetails[chat.id];
+      const title = details?.title || 'User deleted';
+
+      const avatar = details ? userAvatarsMap[details.userId] || null : null;
+
       return { ...chat, title, avatar };
     });
   }
@@ -121,7 +145,12 @@ export class ChatService {
 
     // try to find existing
     const existing = await this.chatRepository.findByDmKey(dmKey);
-    if (existing) return existing;
+    if (existing) {
+      return {
+        ...existing,
+        title: await this.getPrivateChatTitle(existing.id, user.id),
+      };
+    }
 
     // create chat
     const createdPrivateChat = await this.chatRepository.createPrivateChat({
@@ -140,7 +169,10 @@ export class ChatService {
       }),
     );
 
-    return createdPrivateChat;
+    return {
+      ...createdPrivateChat,
+      title: await this.getPrivateChatTitle(createdPrivateChat.id, user.id),
+    };
   }
 
   async findById(id: number, user: ActiveUser): Promise<ChatDetailsWithAvatar> {
@@ -152,17 +184,40 @@ export class ChatService {
 
     const chatUsers = await this.chatParticipantService.findChatUsers(chat.id);
 
-    const avatar = await this.chatAvatarService.findMainAvatar(chat.id);
+    const userIds = chatUsers.map((p) => p.user.id);
+    let userAvatarsMap: Record<number, Media> = {};
 
+    if (userIds.length > 0) {
+      userAvatarsMap = await this.userAvatarService.getAvatarsByUserIds(
+        userIds as NonEmptyArray<number>,
+      );
+    }
+
+    const participantsWithAvatars = chatUsers.map((p) => ({
+      ...p,
+      user: {
+        ...p.user,
+        avatar: userAvatarsMap[p.user.id] || null,
+      },
+    }));
+
+    let avatar: Nullable<Media> = null;
     let chatTitle = chat.title;
+
     if (isPrivateChat(chat)) {
-      const receiver = chatUsers.find(({ id }) => id !== user.id);
+      const receiver = chatUsers.find((cu) => cu.user.id !== user.id);
       chatTitle = receiver?.user.username || 'User deleted';
+
+      if (receiver) {
+        avatar = userAvatarsMap[receiver.user.id] || null;
+      }
+    } else {
+      avatar = await this.chatAvatarService.findMainAvatar(chat.id);
     }
 
     return {
       ...chat,
-      participants: chatUsers,
+      participants: participantsWithAvatars,
       title: chatTitle!,
       avatar,
     };
@@ -209,5 +264,11 @@ export class ChatService {
 
   async deleteAvatar(chatId: number, mediaId: number): Promise<MessageApiResponseDto> {
     return this.chatAvatarService.deleteAvatar(chatId, mediaId);
+  }
+
+  private async getPrivateChatTitle(chatId: number, currentUserId: number): Promise<string> {
+    const participants = await this.chatParticipantService.findChatUsers(chatId);
+    const receiver = participants.find((p) => p.user.id !== currentUserId);
+    return receiver?.user.username || 'User deleted';
   }
 }

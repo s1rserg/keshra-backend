@@ -3,7 +3,7 @@ import type { EntityManager } from 'typeorm';
 
 import { Nullable } from '@common/types';
 
-import type { ChatParticipant, ChatParticipantWithUser, PrivateChatTitleDto } from '../types';
+import type { ChatParticipant, ChatParticipantWithUser, PrivateChatIdTitleDto } from '../types';
 import type { CreateChatParticipantDto } from '../dto/create-chat-participant.dto';
 import { ChatParticipantRepository } from '../repositories/chat-participant.repository';
 
@@ -30,7 +30,7 @@ export class ChatParticipantService {
     chatsIds: number[],
     userId: number,
     manager?: EntityManager,
-  ): Promise<PrivateChatTitleDto> {
+  ): Promise<PrivateChatIdTitleDto> {
     return this.chatParticipantRepository.findPrivateChatsTitle(chatsIds, userId, manager);
   }
 
