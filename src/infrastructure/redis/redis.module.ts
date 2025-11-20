@@ -1,8 +1,10 @@
-import { Global, Inject, Module, OnModuleDestroy } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import { createClient, RedisClientType } from 'redis';
+import { RedisManager } from './redis.manager';
+import { createClient } from 'redis';
 
 import { redisConfig } from './redis.config';
+import { ReadSyncService } from './services/read-sync.service';
 
 @Global()
 @Module({
@@ -11,24 +13,15 @@ import { redisConfig } from './redis.config';
     {
       provide: 'REDIS_CLIENT',
       inject: [redisConfig.KEY],
-      useFactory: async (config: ConfigType<typeof redisConfig>) => {
-        const client = createClient({
+      useFactory: (config: ConfigType<typeof redisConfig>) => {
+        return createClient({
           url: config.url,
         });
-
-        await client.connect();
-        return client;
       },
     },
+    RedisManager,
+    ReadSyncService,
   ],
-  exports: ['REDIS_CLIENT'],
+  exports: [RedisManager, ReadSyncService],
 })
-export class RedisModule implements OnModuleDestroy {
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: RedisClientType) {}
-
-  async onModuleDestroy() {
-    if (this.redisClient.isOpen) {
-      await this.redisClient.disconnect();
-    }
-  }
-}
+export class RedisModule {}
