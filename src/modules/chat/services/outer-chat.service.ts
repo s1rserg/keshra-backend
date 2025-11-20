@@ -14,8 +14,8 @@ export class OuterChatService {
     private readonly chatAccessService: ChatAccessService,
   ) {}
 
-  async findByIdOrThrow(id: number): Promise<Chat> {
-    const chat = await this.chatRepository.findById(id);
+  async findByIdOrThrow(id: number, manager?: EntityManager): Promise<Chat> {
+    const chat = await this.chatRepository.findById(id, manager);
     if (!chat) throw new NotFoundException(`Chat not found`);
 
     return chat;

@@ -22,4 +22,5 @@ export type UpdateLastMessagePayload = {
   lastMessageAuthorId: number;
   lastMessageAuthor: string;
   lastMessagePreview: string;
+  lastSegNumber: number;
 };

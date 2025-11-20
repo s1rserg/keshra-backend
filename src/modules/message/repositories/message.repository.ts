@@ -49,6 +49,7 @@ export class MessageRepository {
 
   async create(
     createMessageDto: CreateMessageDto,
+    segNumber: number,
     authorId: number,
     manager?: EntityManager,
   ): Promise<Message> {
@@ -57,6 +58,7 @@ export class MessageRepository {
     const createdMessage = repository.create({
       ...createMessageDto,
       authorId,
+      segNumber,
     });
 
     const message = await repository.save(createdMessage);

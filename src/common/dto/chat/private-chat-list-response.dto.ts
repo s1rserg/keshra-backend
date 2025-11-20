@@ -22,6 +22,10 @@ export class PrivateChatListResponseDto {
   type: ChatType;
 
   @Expose()
+  @ApiProperty()
+  unreadCount: number;
+
+  @Expose()
   @ApiProperty({ type: ChatMediaResponseDto, nullable: true })
   avatar: Nullable<ChatMediaResponseDto>;
 

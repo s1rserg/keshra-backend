@@ -4,6 +4,7 @@ export const toMessageMapper = (messageLike: MessageBase): Message => {
   return {
     id: messageLike.id,
     content: messageLike.content,
+    segNumber: messageLike.segNumber,
     chatId: messageLike.chatId,
     authorId: messageLike.authorId,
     updatedAt: messageLike.updatedAt,

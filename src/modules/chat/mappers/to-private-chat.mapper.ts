@@ -25,5 +25,6 @@ export const toPrivateChatMapper = (entity: ChatBase): PrivateChat => {
     lastMessagePreview: entity.lastMessagePreview,
     lastMessageAuthor: entity.lastMessageAuthor,
     lastMessageAuthorId: entity.lastMessageAuthorId,
+    lastSegNumber: entity.lastSegNumber,
   };
 };

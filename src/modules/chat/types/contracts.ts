@@ -19,6 +19,7 @@ export interface ChatBase {
   lastMessagePreview: Nullable<string>;
   lastMessageAuthor: Nullable<string>;
   lastMessageAuthorId: Nullable<number>;
+  lastSegNumber: number;
 }
 
 type PublicChatOmit = Omit<ChatBase, 'dmKey'>;
@@ -35,6 +36,6 @@ export interface PrivateChat extends ChatBase {
 }
 
 export type Chat = PublicChat | PrivateChat;
-export type ChatWithAvatar = Chat & { avatar: Nullable<Media> };
+export type ChatWithAvatarAndCount = Chat & { avatar: Nullable<Media>; unreadCount: number };
 export type ChatWithParticipants = Chat & { participants: ChatParticipantWithUser[] };
 export type ChatDetailsWithAvatar = ChatWithParticipants & { avatar: Nullable<Media> };

@@ -1,8 +1,11 @@
 import type { ChatBase } from '@modules/chat';
 import type { User } from '@modules/user';
 
+import { Nullable } from '@common/types';
+
 export interface ChatParticipantBase {
   id: number;
+  lastReadSegNumber: Nullable<number>;
   chatId: number;
   userId: number;
   joinedAt: Date;

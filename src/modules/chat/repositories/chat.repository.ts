@@ -1,6 +1,13 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { type EntityManager, In, Like, Repository, type UpdateResult } from 'typeorm';
+import {
+  type EntityManager,
+  FindOneOptions,
+  In,
+  Like,
+  Repository,
+  type UpdateResult,
+} from 'typeorm';
 
 import type { Nullable } from '@common/types';
 
@@ -71,11 +78,15 @@ export class ChatRepository {
     return chat ? toPrivateChatMapper(chat) : null;
   }
 
-  async findById(id: number): Promise<Nullable<Chat>> {
-    const chat = await this.chatRepository.findOne({
-      where: { id },
-    });
+  async findById(id: number, manager?: EntityManager): Promise<Nullable<Chat>> {
+    const repository = this.getRepository(manager);
 
+    const findOptions: FindOneOptions<ChatEntity> = { where: { id } };
+    if (manager) {
+      findOptions.lock = { mode: 'pessimistic_write' };
+    }
+
+    const chat = await repository.findOne(findOptions);
     return chat ? toChatMapper(chat) : null;
   }
 

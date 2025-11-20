@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, InternalServerErrorException } from '@n
 import { DataSource } from 'typeorm';
 
 import { type Chat, OuterChatService } from '@modules/chat';
+import { ChatParticipantService } from '@modules/chat-participant';
 import { RealtimeChatEventsService } from '@modules/realtime';
 
 import type { Message, MessageWithAuthor } from '../types';
@@ -15,6 +16,7 @@ export class MessageService {
     private readonly messageRepository: MessageRepository,
     private readonly chatService: OuterChatService,
     private readonly realtimeChatEventsService: RealtimeChatEventsService,
+    private readonly chatParticipantService: ChatParticipantService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -30,11 +32,15 @@ export class MessageService {
     try {
       const manager = queryRunner.manager;
 
+      const chat = await this.chatService.findByIdOrThrow(createMessageDto.chatId, manager);
+
       const createdMessage = await this.messageRepository.create(
         createMessageDto,
+        chat.lastSegNumber + 1,
         activeUserId,
         manager,
       );
+
       const messageWithAuthor = await this.messageRepository.findOneById(
         createdMessage.id,
         manager,
@@ -54,8 +60,15 @@ export class MessageService {
           lastMessageAuthorId: messageWithAuthor.authorId,
           lastMessageAuthor,
           lastMessagePreview,
+          lastSegNumber: messageWithAuthor.segNumber,
         },
         manager,
+      );
+
+      await this.chatParticipantService.updateLastRead(
+        activeUserId,
+        chat.id,
+        messageWithAuthor.segNumber,
       );
 
       await queryRunner.commitTransaction();
