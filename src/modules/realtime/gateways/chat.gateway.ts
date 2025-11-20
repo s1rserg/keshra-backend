@@ -1,4 +1,4 @@
-import { UseFilters } from '@nestjs/common';
+import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -25,6 +25,7 @@ import {
   WsForbiddenException,
   WsUnauthorizedException,
 } from '../exceptions/ws-exceptions';
+import { MarkChatReadDto } from '../dto/mark-chat-read.dto';
 import { RealtimeChatService } from '../services/realtime-chat.service';
 import { RealtimeChatEventsService } from '../services/realtime-chat-events.service';
 
@@ -103,6 +104,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         void socket.leave(room);
       }
     });
+  }
+
+  @SubscribeMessage(ClientToServerEvent.CHAT_MARK_READ)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async onMarkRead(
+    @ConnectedSocket() socket: TypedSocket,
+    @MessageBody() payload: MarkChatReadDto,
+  ) {
+    const user = socket.data.user!;
+    await this.realtimeChatService.markChatAsRead(user.id, payload);
   }
 
   afterInit(server: TypedServer) {

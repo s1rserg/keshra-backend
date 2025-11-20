@@ -6,6 +6,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -14,6 +15,7 @@ import { UserEntity } from '@modules/user';
 
 @Index('idx_messages_author_id', ['authorId'])
 @Index('idx_messages_chats_id_created_at_id', ['chatId', 'createdAt', 'id'])
+@Unique(['chatId', 'segNumber'])
 @Entity({ name: 'messages', orderBy: { createdAt: 'ASC', id: 'ASC' } })
 export class MessageEntity {
   @PrimaryGeneratedColumn()
@@ -27,6 +29,9 @@ export class MessageEntity {
 
   @Column({ name: 'chat_id' })
   chatId: number;
+
+  @Column({ name: 'seg_number', type: 'int' })
+  segNumber: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

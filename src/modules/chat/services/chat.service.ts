@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { ChatParticipantService } from '@modules/chat-participant';
+import { ChatParticipant, ChatParticipantService } from '@modules/chat-participant';
 import { ChatAvatarService, Media, UserAvatarService } from '@modules/media';
 
 import type { ActiveUser, FileUpload, NonEmptyArray, Nullable } from '@common/types';
@@ -13,7 +13,7 @@ import { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
 import {
   ChatDetailsWithAvatar,
-  ChatWithAvatar,
+  ChatWithAvatarAndCount,
   type ChatWithParticipants,
   isPrivateChat,
   type PrivateChat,
@@ -36,7 +36,7 @@ export class ChatService {
     private readonly userAvatarService: UserAvatarService,
   ) {}
 
-  async findUserChats(user: ActiveUser): Promise<ChatWithAvatar[]> {
+  async findUserChats(user: ActiveUser): Promise<ChatWithAvatarAndCount[]> {
     const participants = await this.chatParticipantService.findByUserId(user.id);
     const chatIds = participants.map((participant) => participant.chatId);
     const chatArray = await this.chatRepository.findByIds(chatIds);
@@ -72,9 +72,19 @@ export class ChatService {
       }
     }
 
+    const participantMap: Record<number, ChatParticipant> = {};
+    for (const p of participants) {
+      participantMap[p.chatId] = p;
+    }
+
     return chatArray.map((chat) => {
+      const participant = participantMap[chat.id];
+      const unreadCount = participant
+        ? Math.max(chat.lastSegNumber - (participant.lastReadSegNumber || 0), 0)
+        : 0;
+
       if (!isPrivateChat(chat)) {
-        return { ...chat, avatar: chatAvatarsMap[chat.id] || null };
+        return { ...chat, avatar: chatAvatarsMap[chat.id] || null, unreadCount };
       }
 
       const details = privateChatDetails[chat.id];
@@ -82,7 +92,7 @@ export class ChatService {
 
       const avatar = details ? userAvatarsMap[details.userId] || null : null;
 
-      return { ...chat, title, avatar };
+      return { ...chat, title, avatar, unreadCount };
     });
   }
 

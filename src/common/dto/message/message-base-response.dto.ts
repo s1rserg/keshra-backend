@@ -13,6 +13,10 @@ export class MessageBaseResponseDto {
 
   @Expose()
   @ApiProperty()
+  segNumber: number;
+
+  @Expose()
+  @ApiProperty()
   authorId: number;
 
   @Expose()

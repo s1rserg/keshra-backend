@@ -69,6 +69,19 @@ export class ChatParticipantRepository {
     return toPrivateChatIdTitleMapper(chats);
   }
 
+  async updateLastRead(userId: number, chatId: number, segNumber: number) {
+    await this.chatParticipantRepository
+      .createQueryBuilder()
+      .update(ChatParticipantEntity)
+      .set({ lastReadSegNumber: segNumber })
+      .where('user_id = :userId', { userId })
+      .andWhere('chat_id = :chatId', { chatId })
+      .andWhere('(last_read_seg_number IS NULL OR last_read_seg_number < :segNumber)', {
+        segNumber,
+      })
+      .execute();
+  }
+
   async findChatUsers(chatId: number): Promise<ChatParticipantWithUser[]> {
     const participants = await this.chatParticipantRepository.find({
       where: { chatId },

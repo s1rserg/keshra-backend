@@ -12,6 +12,8 @@ import {
 import { ChatEntity } from '@modules/chat';
 import { UserEntity } from '@modules/user';
 
+import { Nullable } from '@common/types';
+
 import type { ChatParticipantBase } from '../types';
 
 @Entity({ name: 'chat_participants' })
@@ -31,6 +33,9 @@ export class ChatParticipantEntity implements ChatParticipantBase {
 
   @CreateDateColumn({ name: 'joined_at', type: 'timestamptz' })
   joinedAt: Date;
+
+  @Column({ name: 'last_read_seg_number', type: 'int', nullable: true })
+  lastReadSegNumber: Nullable<number>;
 
   // Relations (no eager to avoid heavy joins)
   @ManyToOne(() => ChatEntity, (chat) => chat.id, {

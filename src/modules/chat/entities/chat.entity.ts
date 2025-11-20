@@ -48,4 +48,7 @@ export class ChatEntity implements ChatBase {
 
   @Column({ name: 'last_message_author_id', type: 'int', nullable: true })
   lastMessageAuthorId: Nullable<number>;
+
+  @Column({ name: 'last_seg_number', type: 'int', default: 0 })
+  lastSegNumber: number;
 }

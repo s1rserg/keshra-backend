@@ -8,6 +8,7 @@ export interface MessageBase {
   content: string;
   chatId: number;
   authorId: number;
+  segNumber: number;
   chat: Nullable<ChatBase>;
   author: Nullable<User>;
   createdAt: Date;

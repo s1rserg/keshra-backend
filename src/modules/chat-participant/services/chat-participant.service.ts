@@ -26,6 +26,10 @@ export class ChatParticipantService {
     return this.chatParticipantRepository.create(createDto, manager);
   }
 
+  async updateLastRead(userId: number, chatId: number, segNumber: number): Promise<void> {
+    return this.chatParticipantRepository.updateLastRead(userId, chatId, segNumber);
+  }
+
   async findPrivateChatsTitle(
     chatsIds: number[],
     userId: number,
