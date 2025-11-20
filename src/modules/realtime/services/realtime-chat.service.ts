@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { type Chat, OuterChatService } from '@modules/chat';
-import { ChatParticipantService } from '@modules/chat-participant';
+import { type Chat, ChatReadSyncService, OuterChatService } from '@modules/chat';
 
 import { WsNotFoundException } from '../exceptions/ws-exceptions';
 import { MarkChatReadDto } from '../dto/mark-chat-read.dto';
@@ -10,7 +9,7 @@ import { MarkChatReadDto } from '../dto/mark-chat-read.dto';
 export class RealtimeChatService {
   constructor(
     private readonly chatService: OuterChatService,
-    private readonly chatParticipantService: ChatParticipantService,
+    private readonly chatReadSyncService: ChatReadSyncService,
   ) {}
 
   async getChatById(chatId: number): Promise<Chat> {
@@ -31,6 +30,6 @@ export class RealtimeChatService {
     const hasAccess = await this.userHasAccessToChat(userId, payload.chatId);
     if (!hasAccess) return;
 
-    await this.chatParticipantService.updateLastRead(userId, payload.chatId, payload.segNumber);
+    await this.chatReadSyncService.addReadStatus(userId, payload);
   }
 }

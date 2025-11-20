@@ -5,6 +5,7 @@ import { ExceptionFilterModule } from '@app/exception-filter';
 import { AppConfigModule } from '@infrastructure/app-config';
 import { AppJwtModule } from '@infrastructure/app-jwt-module';
 import { DatabaseModule } from '@infrastructure/database';
+import { RedisModule } from '@infrastructure/redis';
 import { AuthModule } from '@modules/auth';
 import { ChatModule } from '@modules/chat';
 import { MessageModule } from '@modules/message';
@@ -21,6 +22,7 @@ import { MediaModule } from './modules/media/media.module';
     ExceptionFilterModule,
     DatabaseModule,
     AppJwtModule,
+    RedisModule,
     UserModule,
     AuthModule,
     ChatModule,
