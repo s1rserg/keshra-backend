@@ -39,4 +39,7 @@ export const envValidationSchema = Joi.object({
   REDIS_DURABLE_USER: Joi.string().required(),
   REDIS_DURABLE_PASSWORD: Joi.string().required(),
   REDIS_DURABLE_HOST: Joi.string().required(),
+
+  // ! Sync Read Statuses
+  CHAT_READ_SYNC_SCHEDULE: Joi.string().required(),
 });

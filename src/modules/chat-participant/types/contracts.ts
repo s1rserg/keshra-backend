@@ -3,6 +3,12 @@ import type { User } from '@modules/user';
 
 import { Nullable } from '@common/types';
 
+export interface UpdateLastRead {
+  segNumber: number;
+  chatId: number;
+  userId: number;
+}
+
 export interface ChatParticipantBase {
   id: number;
   lastReadSegNumber: Nullable<number>;

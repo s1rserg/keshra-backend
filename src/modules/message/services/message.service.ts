@@ -65,11 +65,13 @@ export class MessageService {
         manager,
       );
 
-      await this.chatParticipantService.updateLastRead(
-        activeUserId,
-        chat.id,
-        messageWithAuthor.segNumber,
-      );
+      await this.chatParticipantService.updateLastRead([
+        {
+          segNumber: messageWithAuthor.segNumber,
+          chatId: chat.id,
+          userId: activeUserId,
+        },
+      ]);
 
       await queryRunner.commitTransaction();
       // ! transaction end

@@ -3,7 +3,12 @@ import type { EntityManager } from 'typeorm';
 
 import { Nullable } from '@common/types';
 
-import type { ChatParticipant, ChatParticipantWithUser, PrivateChatIdTitleDto } from '../types';
+import type {
+  ChatParticipant,
+  ChatParticipantWithUser,
+  PrivateChatIdTitleDto,
+  UpdateLastRead,
+} from '../types';
 import type { CreateChatParticipantDto } from '../dto/create-chat-participant.dto';
 import { ChatParticipantRepository } from '../repositories/chat-participant.repository';
 
@@ -26,8 +31,8 @@ export class ChatParticipantService {
     return this.chatParticipantRepository.create(createDto, manager);
   }
 
-  async updateLastRead(userId: number, chatId: number, segNumber: number): Promise<void> {
-    return this.chatParticipantRepository.updateLastRead(userId, chatId, segNumber);
+  async updateLastRead(records: UpdateLastRead[]): Promise<void> {
+    return this.chatParticipantRepository.updateLastReadBatch(records);
   }
 
   async findPrivateChatsTitle(

@@ -4,7 +4,12 @@ import { type EntityManager, In, Not, Repository } from 'typeorm';
 
 import { Nullable } from '@common/types';
 
-import type { ChatParticipant, ChatParticipantWithUser, PrivateChatIdTitleDto } from '../types';
+import type {
+  ChatParticipant,
+  ChatParticipantWithUser,
+  PrivateChatIdTitleDto,
+  UpdateLastRead,
+} from '../types';
 import type { CreateChatParticipantDto } from '../dto/create-chat-participant.dto';
 import { ChatParticipantEntity } from '../entities/chat-participant.entity';
 import { toChatParticipantMapper } from '../mappers/to-chat-participant.mapper';
@@ -69,17 +74,23 @@ export class ChatParticipantRepository {
     return toPrivateChatIdTitleMapper(chats);
   }
 
-  async updateLastRead(userId: number, chatId: number, segNumber: number) {
-    await this.chatParticipantRepository
-      .createQueryBuilder()
-      .update(ChatParticipantEntity)
-      .set({ lastReadSegNumber: segNumber })
-      .where('user_id = :userId', { userId })
-      .andWhere('chat_id = :chatId', { chatId })
-      .andWhere('(last_read_seg_number IS NULL OR last_read_seg_number < :segNumber)', {
-        segNumber,
-      })
-      .execute();
+  async updateLastReadBatch(records: UpdateLastRead[]) {
+    const params = records.flatMap((r) => [r.userId, r.chatId, r.segNumber]);
+
+    const placeholders = records
+      .map((_, i) => `($${i * 3 + 1}::int, $${i * 3 + 2}::int, $${i * 3 + 3}::int)`)
+      .join(', ');
+
+    const query = `
+    UPDATE chat_participants AS cp
+    SET last_read_seg_number = v.seg_number
+    FROM (VALUES ${placeholders}) AS v(user_id, chat_id, seg_number)
+    WHERE cp.user_id = v.user_id 
+      AND cp.chat_id = v.chat_id
+      AND (cp.last_read_seg_number IS NULL OR cp.last_read_seg_number < v.seg_number)
+  `;
+
+    await this.chatParticipantRepository.query(query, params);
   }
 
   async findChatUsers(chatId: number): Promise<ChatParticipantWithUser[]> {
