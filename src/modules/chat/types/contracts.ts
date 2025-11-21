@@ -35,7 +35,18 @@ export interface PrivateChat extends ChatBase {
   dmKey: string;
 }
 
+export interface PrivateChatWithPartnerUserId extends ChatBase {
+  type: ChatType.DIRECT_MESSAGES;
+  dmKey: string;
+  partnerUserId: number;
+}
+
 export type Chat = PublicChat | PrivateChat;
-export type ChatWithAvatarAndCount = Chat & { avatar: Nullable<Media>; unreadCount: number };
+
+export type UserChat = (PublicChat | PrivateChatWithPartnerUserId) & {
+  avatar: Nullable<Media>;
+  unreadCount: number;
+};
+
 export type ChatWithParticipants = Chat & { participants: ChatParticipantWithUser[] };
 export type ChatDetailsWithAvatar = ChatWithParticipants & { avatar: Nullable<Media> };

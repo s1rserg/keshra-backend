@@ -35,11 +35,15 @@ import { GetAllUsersQueryDto } from './dto/get-all-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UploadAvatarDto } from './dto/upload-avatar-dto';
 import { UserService } from './services/user.service';
+import { UserPresenceService } from './services/user-presence.service';
 
 @Controller('users')
 @SwaggerUnauthorizedResponse()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly userPresenceService: UserPresenceService,
+  ) {}
 
   @Post()
   @ApiExcludeEndpoint()
@@ -53,6 +57,12 @@ export class UserController {
   @TransformPlainToInstance(UserResponseDto)
   async findAll(@Query() query: GetAllUsersQueryDto): Promise<UserListResponseDto[]> {
     return this.userService.findAll(query);
+  }
+
+  @Get('online')
+  @ApiExcludeEndpoint()
+  async getOnlineFriends(@RequestUser() user: ActiveUser): Promise<number[]> {
+    return this.userPresenceService.getOnlineFriends(user.id);
   }
 
   @Get('me')

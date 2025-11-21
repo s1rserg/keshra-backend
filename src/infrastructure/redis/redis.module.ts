@@ -4,6 +4,7 @@ import { RedisManager } from './redis.manager';
 import { createClient } from 'redis';
 
 import { redisConfig } from './redis.config';
+import { PresenceService } from './services/presence.service';
 import { ReadSyncService } from './services/read-sync.service';
 
 @Global()
@@ -21,7 +22,8 @@ import { ReadSyncService } from './services/read-sync.service';
     },
     RedisManager,
     ReadSyncService,
+    PresenceService,
   ],
-  exports: [RedisManager, ReadSyncService],
+  exports: [RedisManager, ReadSyncService, PresenceService],
 })
 export class RedisModule {}
