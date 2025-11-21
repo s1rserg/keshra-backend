@@ -1,3 +1,4 @@
+import { toReactionMapper } from '@modules/reaction';
 import { toUserMapper } from '@modules/user';
 
 import type { MessageBase, MessageWithAuthor } from '../types';
@@ -12,6 +13,7 @@ export const toMessageWithAuthorMapper = (messageLike: MessageBase): MessageWith
     id: messageLike.id,
     content: messageLike.content,
     segNumber: messageLike.segNumber,
+    reactions: messageLike.reactions.map(toReactionMapper),
     chatId: messageLike.chatId,
     authorId: messageLike.authorId,
     createdAt: messageLike.createdAt,

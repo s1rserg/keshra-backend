@@ -30,13 +30,26 @@ export class MessageRepository {
         createdAt: 'DESC',
         id: 'DESC',
       },
-      relations: { author: true },
+      relations: { author: true, reactions: { author: true } },
     });
 
     return messages.reverse().map(toMessageWithAuthorMapper);
   }
 
-  async findOneById(id: number, manager?: EntityManager): Promise<Nullable<MessageWithAuthor>> {
+  async findOneById(id: number, manager?: EntityManager): Promise<Nullable<Message>> {
+    const repository = this.getRepository(manager);
+
+    const message = await repository.findOne({
+      where: { id },
+    });
+
+    return message ? toMessageMapper(message) : null;
+  }
+
+  async findOneByIdWithAuthor(
+    id: number,
+    manager?: EntityManager,
+  ): Promise<Nullable<MessageWithAuthor>> {
     const repository = this.getRepository(manager);
 
     const message = await repository.findOne({

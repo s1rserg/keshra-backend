@@ -5,6 +5,8 @@ import { type Chat, OuterChatService } from '@modules/chat';
 import { ChatParticipantService } from '@modules/chat-participant';
 import { RealtimeChatEventsService } from '@modules/realtime';
 
+import { Nullable } from '@common/types';
+
 import type { Message, MessageWithAuthor } from '../types';
 import type { CreateMessageDto } from '../dto/create-message.dto';
 import type { GetMessagesQueryDto } from '../dto/get-messages-query.dto';
@@ -41,7 +43,7 @@ export class MessageService {
         manager,
       );
 
-      const messageWithAuthor = await this.messageRepository.findOneById(
+      const messageWithAuthor = await this.messageRepository.findOneByIdWithAuthor(
         createdMessage.id,
         manager,
       );
@@ -92,6 +94,13 @@ export class MessageService {
     if (!hasAccess) throw new ForbiddenException('You do not have access to this chat');
 
     return this.messageRepository.findAllByChatId(query);
+  }
+
+  async findOneById(id: number, userId: number, chatId: number): Promise<Nullable<Message>> {
+    const hasAccess = await this.userHasAccessToChat(userId, chatId);
+    if (!hasAccess) throw new ForbiddenException('You do not have access to this chat');
+
+    return this.messageRepository.findOneById(id);
   }
 
   // ! PRIVATE METHODS
