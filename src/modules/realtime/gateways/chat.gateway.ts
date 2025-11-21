@@ -28,6 +28,7 @@ import {
 import { MarkChatReadDto } from '../dto/mark-chat-read.dto';
 import { RealtimeChatService } from '../services/realtime-chat.service';
 import { RealtimeChatEventsService } from '../services/realtime-chat-events.service';
+import { RealtimeChatPresenceService } from '../services/realtime-chat-presence.service';
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
@@ -44,6 +45,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly jwtService: AppJwtService,
     private readonly chatEvents: RealtimeChatEventsService,
     private readonly realtimeChatService: RealtimeChatService,
+    private readonly presenceService: RealtimeChatPresenceService,
   ) {}
 
   @SubscribeMessage(ClientToServerEvent.CHAT_JOIN)
@@ -136,6 +138,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       socket.data.user = activeUser;
       // personal room:
       void socket.join(`user:${activeUser.id}`);
+
+      const { notifyListIds } = await this.presenceService.handleUserConnect(activeUser.id);
+
+      if (notifyListIds.length > 0) {
+        notifyListIds.forEach((friendId) => {
+          this.server
+            .to(`user:${friendId}`)
+            .emit(ServerToClientEvent.CHAT_PRESENCE_USER_ONLINE, activeUser.id);
+        });
+      }
     } catch (_error) {
       socket.emit(
         ServerToClientEvent.APP_ERROR,
@@ -145,7 +157,19 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     }
   }
 
-  handleDisconnect(socket: TypedSocket) {
+  async handleDisconnect(socket: TypedSocket) {
+    const user = socket.data.user;
+    if (user) {
+      const { notifyListIds } = await this.presenceService.handleUserDisconnect(user.id);
+
+      if (notifyListIds.length > 0) {
+        notifyListIds.forEach((friendId) => {
+          this.server
+            .to(`user:${friendId}`)
+            .emit(ServerToClientEvent.CHAT_PRESENCE_USER_OFFLINE, user.id);
+        });
+      }
+    }
     void socket._cleanup();
   }
 }

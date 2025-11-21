@@ -21,6 +21,10 @@ export class PrivateChatListResponseDto {
   @Expose()
   type: ChatType;
 
+  @ApiProperty()
+  @Expose()
+  partnerUserId: number;
+
   @Expose()
   @ApiProperty()
   unreadCount: number;

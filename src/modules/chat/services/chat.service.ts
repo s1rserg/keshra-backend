@@ -13,17 +13,18 @@ import { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
 import {
   ChatDetailsWithAvatar,
-  ChatWithAvatarAndCount,
   type ChatWithParticipants,
   isPrivateChat,
   type PrivateChat,
   type PublicChat,
   PublicChatWithAvatar,
+  UserChat,
 } from '../types';
 import { ChatType } from '../enums/chat-type.enum';
 import type { CreatePrivateChatDto } from '../dto/create-private-chat.dto';
 import type { CreatePublicChatDto } from '../dto/create-public-chat.dto';
 import { ChatAccessService } from './chat-access.service';
+import { ChatPresenceService } from './chat-presence.service';
 import { ChatRepository } from '../repositories/chat.repository';
 
 @Injectable()
@@ -34,9 +35,10 @@ export class ChatService {
     private readonly chatAccessService: ChatAccessService,
     private readonly chatAvatarService: ChatAvatarService,
     private readonly userAvatarService: UserAvatarService,
+    private readonly presenceService: ChatPresenceService,
   ) {}
 
-  async findUserChats(user: ActiveUser): Promise<ChatWithAvatarAndCount[]> {
+  async findUserChats(user: ActiveUser): Promise<UserChat[]> {
     const participants = await this.chatParticipantService.findByUserId(user.id);
     const chatIds = participants.map((participant) => participant.chatId);
     const chatArray = await this.chatRepository.findByIds(chatIds);
@@ -66,6 +68,8 @@ export class ChatService {
       const partnerUserIds = Object.values(privateChatDetails).map((d) => d.userId);
 
       if (partnerUserIds.length > 0) {
+        await this.presenceService.refreshFriendsCache(user.id, partnerUserIds);
+
         userAvatarsMap = await this.userAvatarService.getAvatarsByUserIds(
           partnerUserIds as NonEmptyArray<number>,
         );
@@ -92,7 +96,7 @@ export class ChatService {
 
       const avatar = details ? userAvatarsMap[details.userId] || null : null;
 
-      return { ...chat, title, avatar, unreadCount };
+      return { ...chat, title, avatar, unreadCount, partnerUserId: details!.userId };
     });
   }
 
