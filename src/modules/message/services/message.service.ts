@@ -3,7 +3,11 @@ import { DataSource } from 'typeorm';
 
 import { type Chat, OuterChatService } from '@modules/chat';
 import { ChatParticipantService } from '@modules/chat-participant';
+import { UserAvatarService } from '@modules/media';
 import { RealtimeChatEventsService } from '@modules/realtime';
+
+import { Nullable } from '@common/types';
+import { isNonEmptyArray } from '@common/utils/non-empty-check';
 
 import type { Message, MessageWithAuthor } from '../types';
 import type { CreateMessageDto } from '../dto/create-message.dto';
@@ -18,6 +22,7 @@ export class MessageService {
     private readonly realtimeChatEventsService: RealtimeChatEventsService,
     private readonly chatParticipantService: ChatParticipantService,
     private readonly dataSource: DataSource,
+    private readonly userAvatarService: UserAvatarService,
   ) {}
 
   async create(createMessageDto: CreateMessageDto, activeUserId: number): Promise<Message> {
@@ -41,7 +46,7 @@ export class MessageService {
         manager,
       );
 
-      const messageWithAuthor = await this.messageRepository.findOneById(
+      const messageWithAuthor = await this.messageRepository.findOneByIdWithAuthor(
         createdMessage.id,
         manager,
       );
@@ -49,6 +54,10 @@ export class MessageService {
       if (!messageWithAuthor) {
         throw new InternalServerErrorException('Can not create message.');
       }
+
+      messageWithAuthor.author.avatar = await this.userAvatarService.findMainAvatar(
+        messageWithAuthor.authorId,
+      );
 
       const lastMessageAuthor = this.getAuthorName(messageWithAuthor.author);
       const lastMessagePreview = this.buildMessagePreview(messageWithAuthor.content);
@@ -91,7 +100,18 @@ export class MessageService {
     const hasAccess = await this.userHasAccessToChat(userId, query.chatId);
     if (!hasAccess) throw new ForbiddenException('You do not have access to this chat');
 
-    return this.messageRepository.findAllByChatId(query);
+    const messages = await this.messageRepository.findAllByChatId(query);
+
+    await this.enrichAuthorsWithAvatars(messages);
+
+    return messages;
+  }
+
+  async findOneById(id: number, userId: number, chatId: number): Promise<Nullable<Message>> {
+    const hasAccess = await this.userHasAccessToChat(userId, chatId);
+    if (!hasAccess) throw new ForbiddenException('You do not have access to this chat');
+
+    return this.messageRepository.findOneById(id);
   }
 
   // ! PRIVATE METHODS
@@ -125,6 +145,41 @@ export class MessageService {
       });
     } catch (_error) {
       // ignore WS errors because WS has its own error handling
+    }
+  }
+
+  private async enrichAuthorsWithAvatars(messages: MessageWithAuthor[]): Promise<void> {
+    const authorIdsSet = new Set<number>();
+
+    messages.forEach((message) => {
+      authorIdsSet.add(message.authorId);
+      if (message.reactions) {
+        message.reactions.forEach((reaction) => {
+          authorIdsSet.add(reaction.authorId);
+        });
+      }
+    });
+
+    if (authorIdsSet.size === 0) return;
+
+    const uniqueIds = Array.from(authorIdsSet);
+
+    if (isNonEmptyArray(uniqueIds)) {
+      const avatarsMap = await this.userAvatarService.getAvatarsByUserIds(uniqueIds);
+
+      messages.forEach((message) => {
+        const messageAuthorAvatar = avatarsMap[message.authorId];
+        if (messageAuthorAvatar && message.author) {
+          message.author.avatar = messageAuthorAvatar;
+        }
+
+        message.reactions?.forEach((reaction) => {
+          const reactionAuthorAvatar = avatarsMap[reaction.authorId];
+          if (reactionAuthorAvatar && reaction.author) {
+            reaction.author.avatar = reactionAuthorAvatar;
+          }
+        });
+      });
     }
   }
 }

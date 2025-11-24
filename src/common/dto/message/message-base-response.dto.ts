@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
+
+import { ReactionResponseDto } from '../reaction/reaction-response.dto';
 
 @Exclude()
 export class MessageBaseResponseDto {
@@ -14,6 +16,11 @@ export class MessageBaseResponseDto {
   @Expose()
   @ApiProperty()
   segNumber: number;
+
+  @Expose()
+  @Type(() => ReactionResponseDto)
+  @ApiProperty({ type: ReactionResponseDto, isArray: true })
+  reactions: ReactionResponseDto[];
 
   @Expose()
   @ApiProperty()

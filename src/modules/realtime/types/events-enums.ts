@@ -12,6 +12,8 @@ export enum ServerToClientEvent {
   ME_JOINED_CHAT = 'me:joined:chat',
   ME_LEFT_CHAT = 'me:left:chat',
   CHAT_MESSAGE_NEW = 'chat:message:new',
+  CHAT_REACTION_NEW = 'chat:reaction:new',
+  CHAT_REACTION_DELETE = 'chat:reaction:delete',
   CHAT_DELTA_NEW = 'chat:delta:new',
   CHAT_PRESENCE_USER_ONLINE = 'chat:presence:user:online',
   CHAT_PRESENCE_USER_OFFLINE = 'chat:presence:user:offline',

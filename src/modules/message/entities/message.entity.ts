@@ -5,12 +5,14 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { ChatEntity } from '@modules/chat';
+import { ReactionEntity } from '@modules/reaction/entities/reaction.entity'; // NOTE: cannot use barrel
 import { UserEntity } from '@modules/user';
 
 @Index('idx_messages_author_id', ['authorId'])
@@ -54,4 +56,7 @@ export class MessageEntity {
     foreignKeyConstraintName: 'messages_chats_id_fk',
   })
   chat: ChatEntity;
+
+  @OneToMany(() => ReactionEntity, (reaction) => reaction.message)
+  reactions: ReactionEntity[];
 }

@@ -9,6 +9,7 @@ import { RedisModule } from '@infrastructure/redis';
 import { AuthModule } from '@modules/auth';
 import { ChatModule } from '@modules/chat';
 import { MessageModule } from '@modules/message';
+import { ReactionModule } from '@modules/reaction';
 import { RealtimeModule } from '@modules/realtime';
 import { UserModule } from '@modules/user';
 
@@ -25,6 +26,7 @@ import { MediaModule } from './modules/media/media.module';
     RedisModule,
     UserModule,
     AuthModule,
+    ReactionModule,
     ChatModule,
     MessageModule,
     RealtimeModule,
