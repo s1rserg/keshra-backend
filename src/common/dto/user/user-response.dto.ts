@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 
 import type { Nullable } from '../../types';
+import { UserMediaResponseDto } from './user-media-response.dto';
 
 @Exclude()
 export class UserResponseDto {
@@ -24,4 +25,8 @@ export class UserResponseDto {
   @Expose()
   @ApiProperty({ type: 'string', nullable: true })
   username: string;
+
+  @Expose()
+  @ApiProperty({ type: UserMediaResponseDto, nullable: true })
+  avatar?: Nullable<UserMediaResponseDto>;
 }

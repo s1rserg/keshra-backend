@@ -1,4 +1,5 @@
 import type { ChatBase } from '@modules/chat';
+import { ReactionWithAuthor } from '@modules/reaction';
 import type { User } from '@modules/user';
 
 import type { Nullable } from '@common/types';
@@ -9,6 +10,7 @@ export interface MessageBase {
   chatId: number;
   authorId: number;
   segNumber: number;
+  reactions: ReactionWithAuthor[];
   chat: Nullable<ChatBase>;
   author: Nullable<User>;
   createdAt: Date;

@@ -10,6 +10,7 @@ export interface User {
   username: string;
   createdAt: Date;
   updatedAt: Date;
+  avatar?: Nullable<Media>;
 }
 
 export interface UserWithAvatar extends User {

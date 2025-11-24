@@ -24,7 +24,7 @@ export class UserDetailsResponseDto {
 
   @Expose()
   @ApiProperty({ type: UserMediaResponseDto, nullable: true })
-  avatar: Nullable<UserMediaResponseDto>;
+  avatar?: Nullable<UserMediaResponseDto>;
 
   @Expose()
   @ApiProperty()
