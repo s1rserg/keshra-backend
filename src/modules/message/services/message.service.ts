@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 import { type Chat, OuterChatService } from '@modules/chat';
@@ -12,6 +17,7 @@ import { isNonEmptyArray } from '@common/utils/non-empty-check';
 import type { Message, MessageWithAuthor } from '../types';
 import type { CreateMessageDto } from '../dto/create-message.dto';
 import type { GetMessagesQueryDto } from '../dto/get-messages-query.dto';
+import { UpdateMessageDto } from '../dto/update-message.dto';
 import { MessageRepository } from '../repositories/message.repository';
 
 @Injectable()
@@ -114,6 +120,117 @@ export class MessageService {
     return this.messageRepository.findOneById(id);
   }
 
+  async update(
+    id: number,
+    userId: number,
+    updateMessageDto: UpdateMessageDto,
+  ): Promise<MessageWithAuthor> {
+    const message = await this.messageRepository.findOneById(id);
+    if (!message) throw new NotFoundException('Message not found');
+
+    if (message.authorId !== userId) {
+      throw new ForbiddenException('You can only edit your own messages');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let newPreview = '';
+
+    try {
+      const manager = queryRunner.manager;
+
+      await this.messageRepository.update(id, updateMessageDto.content, manager);
+
+      const updatedMessage = await this.messageRepository.findOneByIdWithAuthor(id, manager);
+
+      if (!updatedMessage)
+        throw new InternalServerErrorException('Failed to retrieve updated message');
+
+      const chat = await this.chatService.findByIdOrThrow(message.chatId, manager);
+
+      if (chat.lastMessageId === message.id) {
+        newPreview = this.buildMessagePreview(updatedMessage.content);
+
+        await this.chatService.updateLastMessagePreview(chat.id, newPreview, manager);
+      }
+
+      await queryRunner.commitTransaction();
+
+      this.notifyWsMessageUpdate(
+        updatedMessage,
+        newPreview ? chat.lastMessageAuthor! : undefined,
+        newPreview ? newPreview : undefined,
+      );
+      return updatedMessage;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async remove(id: number, userId: number): Promise<void> {
+    const message = await this.messageRepository.findOneById(id);
+    if (!message) throw new NotFoundException('Message not found');
+
+    if (message.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own messages');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let replacementAuthorName: string | undefined;
+    let replacementPreview: string | undefined;
+    const chatId = message.chatId;
+
+    try {
+      const manager = queryRunner.manager;
+
+      await this.messageRepository.softDelete(id, manager);
+
+      const chat = await this.chatService.findByIdOrThrow(chatId, manager);
+
+      if (chat.lastMessageId === message.id) {
+        const newLastMessage = await this.messageRepository.findLastMessageInChat(chatId, manager);
+
+        if (newLastMessage) {
+          replacementAuthorName = this.getAuthorName(newLastMessage.author);
+          replacementPreview = this.buildMessagePreview(newLastMessage.content);
+
+          await this.chatService.updateLastMessageInfo(
+            {
+              chatId: chatId,
+              lastMessageId: newLastMessage.id,
+              lastMessageAuthorId: newLastMessage.authorId,
+              lastMessageAuthor: replacementAuthorName,
+              lastMessagePreview: replacementPreview,
+              lastSegNumber: newLastMessage.segNumber,
+            },
+            manager,
+          );
+        } else {
+          await this.chatService.clearLastMessageInfo(chatId, manager);
+          replacementAuthorName = '';
+          replacementPreview = '';
+        }
+      }
+
+      await queryRunner.commitTransaction();
+
+      this.notifyWsMessageDelete(id, chatId, replacementAuthorName, replacementPreview);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   // ! PRIVATE METHODS
   private async userHasAccessToChat(userId: number, chatArg: number | Chat): Promise<boolean> {
     const chat: Chat =
@@ -143,6 +260,50 @@ export class MessageService {
         lastMessageAuthor,
         lastMessagePreview,
       });
+    } catch (_error) {
+      // ignore WS errors because WS has its own error handling
+    }
+  }
+
+  private notifyWsMessageUpdate(
+    message: MessageWithAuthor,
+    newLastMessageAuthor?: string,
+    newLastMessagePreview?: string,
+  ) {
+    try {
+      this.realtimeChatEventsService.emitMessageUpdated(message);
+
+      if (newLastMessageAuthor && newLastMessagePreview) {
+        this.realtimeChatEventsService.emitUpdatedChatDelta({
+          chatId: message.chatId,
+          lastMessageAuthor: newLastMessageAuthor,
+          lastMessagePreview: newLastMessagePreview,
+        });
+      }
+    } catch (_error) {
+      // ignore WS errors
+    }
+  }
+
+  private notifyWsMessageDelete(
+    messageId: number,
+    chatId: number,
+    newLastMessageAuthor?: string,
+    newLastMessagePreview?: string,
+  ) {
+    try {
+      this.realtimeChatEventsService.emitMessageDeleted({
+        messageId,
+        chatId,
+      });
+
+      if (newLastMessageAuthor && newLastMessagePreview) {
+        this.realtimeChatEventsService.emitUpdatedChatDelta({
+          chatId,
+          lastMessageAuthor: newLastMessageAuthor,
+          lastMessagePreview: newLastMessagePreview,
+        });
+      }
     } catch (_error) {
       // ignore WS errors because WS has its own error handling
     }

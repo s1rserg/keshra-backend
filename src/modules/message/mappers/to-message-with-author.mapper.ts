@@ -18,5 +18,6 @@ export const toMessageWithAuthorMapper = (messageLike: MessageBase): MessageWith
     authorId: messageLike.authorId,
     createdAt: messageLike.createdAt,
     updatedAt: messageLike.updatedAt,
+    deletedAt: messageLike.deletedAt,
   };
 };

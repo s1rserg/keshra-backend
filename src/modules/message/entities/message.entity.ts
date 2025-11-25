@@ -1,13 +1,13 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -15,9 +15,10 @@ import { ChatEntity } from '@modules/chat';
 import { ReactionEntity } from '@modules/reaction/entities/reaction.entity'; // NOTE: cannot use barrel
 import { UserEntity } from '@modules/user';
 
+import { Nullable } from '@common/types';
+
 @Index('idx_messages_author_id', ['authorId'])
 @Index('idx_messages_chats_id_created_at_id', ['chatId', 'createdAt', 'id'])
-@Unique(['chatId', 'segNumber'])
 @Entity({ name: 'messages', orderBy: { createdAt: 'ASC', id: 'ASC' } })
 export class MessageEntity {
   @PrimaryGeneratedColumn()
@@ -40,6 +41,9 @@ export class MessageEntity {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt: Nullable<Date>;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({

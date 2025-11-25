@@ -78,6 +78,36 @@ export class MessageRepository {
     return toMessageMapper(message);
   }
 
+  async update(
+    id: number,
+    content: string,
+    manager?: EntityManager,
+  ): Promise<Nullable<MessageWithAuthor>> {
+    const repository = this.getRepository(manager);
+    await repository.update(id, { content });
+    return this.findOneByIdWithAuthor(id, manager);
+  }
+
+  async softDelete(id: number, manager?: EntityManager): Promise<void> {
+    const repository = this.getRepository(manager);
+    await repository.softDelete(id);
+  }
+
+  async findLastMessageInChat(
+    chatId: number,
+    manager?: EntityManager,
+  ): Promise<Nullable<MessageWithAuthor>> {
+    const repository = this.getRepository(manager);
+
+    const message = await repository.findOne({
+      where: { chatId },
+      order: { createdAt: 'DESC', id: 'DESC' },
+      relations: { author: true },
+    });
+
+    return message ? toMessageWithAuthorMapper(message) : null;
+  }
+
   // ! PRIVATE METHODS
   private getRepository(manager?: EntityManager): Repository<MessageEntity> {
     return manager ? manager.getRepository(MessageEntity) : this.messageRepository;
