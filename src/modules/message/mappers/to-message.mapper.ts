@@ -1,6 +1,7 @@
 import { toReactionWithAuthorMapper } from '@modules/reaction/mappers/to-reaction-with-author.mapper';
 
 import type { Message, MessageBase } from '../types';
+import { toMessageWithAuthorMapper } from './to-message-with-author.mapper';
 
 export const toMessageMapper = (messageLike: MessageBase): Message => {
   return {
@@ -10,6 +11,10 @@ export const toMessageMapper = (messageLike: MessageBase): Message => {
     reactions: (messageLike.reactions || []).map(toReactionWithAuthorMapper),
     chatId: messageLike.chatId,
     authorId: messageLike.authorId,
+    replyToId: messageLike.replyToId,
+    replyToMessage: messageLike.replyToMessage
+      ? toMessageWithAuthorMapper(messageLike.replyToMessage as MessageBase)
+      : null,
     updatedAt: messageLike.updatedAt,
     createdAt: messageLike.createdAt,
     deletedAt: messageLike.deletedAt,

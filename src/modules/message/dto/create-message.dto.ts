@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsPositive, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
 
 import { MessageValidationConfig } from '../config/message-validation.config';
 
@@ -12,6 +12,10 @@ const VALIDATION_MESSAGES = {
   chatId: {
     isInt: 'Chat ID must be an integer',
     isPositive: 'Chat ID must be a positive number',
+  },
+  replyToId: {
+    isInt: 'Message reply to ID must be an integer',
+    isPositive: 'Message reply to ID must be a positive number',
   },
 } as const;
 
@@ -32,4 +36,10 @@ export class CreateMessageDto {
   @IsInt({ message: VALIDATION_MESSAGES.chatId.isInt })
   @IsPositive({ message: VALIDATION_MESSAGES.chatId.isPositive })
   chatId: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt({ message: VALIDATION_MESSAGES.replyToId.isInt })
+  @IsPositive({ message: VALIDATION_MESSAGES.replyToId.isPositive })
+  replyToId?: number;
 }

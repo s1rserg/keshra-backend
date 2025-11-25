@@ -35,6 +35,16 @@ export class MessageService {
     const hasAccess = await this.userHasAccessToChat(activeUserId, createMessageDto.chatId);
     if (!hasAccess) throw new ForbiddenException('You do not have access to this chat');
 
+    if (createMessageDto.replyToId) {
+      const replyToMessage = await this.messageRepository.findOneById(createMessageDto.replyToId);
+      if (!replyToMessage) {
+        throw new NotFoundException('The message you are replying to does not exist.');
+      }
+      if (replyToMessage.chatId !== createMessageDto.chatId) {
+        throw new NotFoundException('There is no message with that id in this chat.');
+      }
+    }
+
     // ! transaction start
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -297,7 +307,7 @@ export class MessageService {
         chatId,
       });
 
-      if (newLastMessageAuthor && newLastMessagePreview) {
+      if (newLastMessageAuthor !== undefined && newLastMessagePreview !== undefined) {
         this.realtimeChatEventsService.emitUpdatedChatDelta({
           chatId,
           lastMessageAuthor: newLastMessageAuthor,

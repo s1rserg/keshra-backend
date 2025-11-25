@@ -33,6 +33,9 @@ export class MessageEntity {
   @Column({ name: 'chat_id' })
   chatId: number;
 
+  @Column({ name: 'reply_to_id', nullable: true })
+  replyToId: Nullable<number>;
+
   @Column({ name: 'seg_number', type: 'int' })
   segNumber: number;
 
@@ -52,6 +55,10 @@ export class MessageEntity {
     foreignKeyConstraintName: 'messages_users_id_fk',
   })
   author: UserEntity;
+
+  @ManyToOne(() => MessageEntity, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'reply_to_id' })
+  replyToMessage: Nullable<MessageEntity>;
 
   @ManyToOne(() => ChatEntity, { onDelete: 'CASCADE' })
   @JoinColumn({

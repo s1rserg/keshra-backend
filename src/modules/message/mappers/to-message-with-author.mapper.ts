@@ -16,6 +16,10 @@ export const toMessageWithAuthorMapper = (messageLike: MessageBase): MessageWith
     reactions: (messageLike.reactions || []).map(toReactionWithAuthorMapper),
     chatId: messageLike.chatId,
     authorId: messageLike.authorId,
+    replyToId: messageLike.replyToId,
+    replyToMessage: messageLike.replyToMessage
+      ? toMessageWithAuthorMapper(messageLike.replyToMessage as MessageBase)
+      : null,
     createdAt: messageLike.createdAt,
     updatedAt: messageLike.updatedAt,
     deletedAt: messageLike.deletedAt,
