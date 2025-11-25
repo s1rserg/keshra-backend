@@ -15,6 +15,7 @@ export interface MessageBase {
   author: Nullable<User>;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Nullable<Date>;
 }
 
 type MessageOmit = Omit<MessageBase, 'author' | 'chat'>;

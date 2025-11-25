@@ -110,6 +110,29 @@ export class ChatRepository {
     return repository.update(chatId, rest);
   }
 
+  async updateLastMessagePreview(
+    chatId: number,
+    newPreview: string,
+    manager?: EntityManager,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(manager);
+
+    return repository.update(chatId, {
+      lastMessagePreview: newPreview,
+    });
+  }
+
+  async clearLastMessageInfo(chatId: number, manager?: EntityManager): Promise<UpdateResult> {
+    const repository = this.getRepository(manager);
+
+    return repository.update(chatId, {
+      lastMessageId: null,
+      lastMessagePreview: null,
+      lastMessageAuthor: null,
+      lastMessageAuthorId: null,
+    });
+  }
+
   // ! PRIVATE METHODS
   private getRepository(manager?: EntityManager): Repository<ChatEntity> {
     return manager ? manager.getRepository(ChatEntity) : this.chatRepository;

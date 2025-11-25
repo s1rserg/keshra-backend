@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { TransformPlainToInstance } from 'class-transformer';
 
@@ -12,6 +22,7 @@ import { SwaggerUnauthorizedResponse } from '@swagger-decorators/unauthorized-re
 
 import { CreateMessageDto } from './dto/create-message.dto';
 import { GetMessagesQueryDto } from './dto/get-messages-query.dto';
+import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageService } from './services/message.service';
 
 @SwaggerUnauthorizedResponse()
@@ -39,5 +50,25 @@ export class MessageController {
     @Query() query: GetMessagesQueryDto,
   ): Promise<MessageWithAuthorResponseDto[]> {
     return this.messageService.findAllByChatId(query, user.id);
+  }
+
+  @Patch(':id')
+  @ApiOkResponse({ type: MessageBaseResponseDto })
+  @TransformPlainToInstance(MessageBaseResponseDto)
+  async update(
+    @RequestUser() user: ActiveUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMessageDto: UpdateMessageDto,
+  ): Promise<MessageBaseResponseDto> {
+    return this.messageService.update(id, user.id, updateMessageDto);
+  }
+
+  @Delete(':id')
+  @ApiOkResponse({ description: 'Message deleted successfully' })
+  async remove(
+    @RequestUser() user: ActiveUser,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    return this.messageService.remove(id, user.id);
   }
 }

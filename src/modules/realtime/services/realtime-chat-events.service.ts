@@ -5,6 +5,8 @@ import { ReactionWithAuthor } from '@modules/reaction';
 
 import {
   type ChatDeltaNewDto,
+  ChatDeltaUpdateDto,
+  MessageDeletedPayload,
   ReactionDeletedPayload,
   ServerToClientEvent,
   type TypedServer,
@@ -22,6 +24,14 @@ export class RealtimeChatEventsService {
     this.server.to(`chat:${message.chatId}`).emit(ServerToClientEvent.CHAT_MESSAGE_NEW, message);
   }
 
+  emitMessageUpdated(message: MessageWithAuthor) {
+    this.server.to(`chat:${message.chatId}`).emit(ServerToClientEvent.CHAT_MESSAGE_UPDATE, message);
+  }
+
+  emitMessageDeleted(payload: MessageDeletedPayload) {
+    this.server.to(`chat:${payload.chatId}`).emit(ServerToClientEvent.CHAT_MESSAGE_DELETE, payload);
+  }
+
   emitNewReaction(reaction: ReactionWithAuthor, chatId: number) {
     this.server.to(`chat:${chatId}`).emit(ServerToClientEvent.CHAT_REACTION_NEW, reaction);
   }
@@ -34,5 +44,11 @@ export class RealtimeChatEventsService {
     this.server
       .to(`chat:delta:${payload.chatId}`)
       .emit(ServerToClientEvent.CHAT_DELTA_NEW, payload);
+  }
+
+  emitUpdatedChatDelta(payload: ChatDeltaUpdateDto) {
+    this.server
+      .to(`chat:delta:${payload.chatId}`)
+      .emit(ServerToClientEvent.CHAT_DELTA_UPDATE, payload);
   }
 }

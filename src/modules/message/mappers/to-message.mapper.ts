@@ -12,5 +12,6 @@ export const toMessageMapper = (messageLike: MessageBase): Message => {
     authorId: messageLike.authorId,
     updatedAt: messageLike.updatedAt,
     createdAt: messageLike.createdAt,
+    deletedAt: messageLike.deletedAt,
   };
 };

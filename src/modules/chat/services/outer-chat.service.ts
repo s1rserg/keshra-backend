@@ -36,6 +36,18 @@ export class OuterChatService {
     }
   }
 
+  async updateLastMessagePreview(
+    chatId: number,
+    newPreview: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    await this.chatRepository.updateLastMessagePreview(chatId, newPreview, manager);
+  }
+
+  async clearLastMessageInfo(chatId: number, manager?: EntityManager): Promise<void> {
+    await this.chatRepository.clearLastMessageInfo(chatId, manager);
+  }
+
   checkUserAccessToChat(userId: number, chat: Chat): boolean {
     return this.chatAccessService.checkUserAccessToChat(userId, chat);
   }
