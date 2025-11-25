@@ -9,10 +9,12 @@ export interface MessageBase {
   content: string;
   chatId: number;
   authorId: number;
+  replyToId: Nullable<number>;
   segNumber: number;
   reactions: ReactionWithAuthor[];
   chat: Nullable<ChatBase>;
   author: Nullable<User>;
+  replyToMessage: Nullable<MessageWithAuthor>;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Nullable<Date>;

@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose, Type } from 'class-transformer';
 
+import { Nullable } from '@common/types';
+
 import { UserResponseDto } from '../user/user-response.dto';
 import { MessageBaseResponseDto } from './message-base-response.dto';
 
@@ -10,4 +12,9 @@ export class MessageWithAuthorResponseDto extends MessageBaseResponseDto {
   @Type(() => UserResponseDto)
   @ApiProperty({ type: UserResponseDto })
   author: UserResponseDto;
+
+  @Expose()
+  @Type(() => MessageWithAuthorResponseDto)
+  @ApiProperty({ type: () => MessageWithAuthorResponseDto, nullable: true })
+  replyToMessage: Nullable<MessageWithAuthorResponseDto>;
 }

@@ -30,7 +30,7 @@ export class MessageRepository {
         createdAt: 'DESC',
         id: 'DESC',
       },
-      relations: { author: true, reactions: { author: true } },
+      relations: { author: true, reactions: { author: true }, replyToMessage: { author: true } },
     });
 
     return messages.reverse().map(toMessageWithAuthorMapper);
@@ -54,7 +54,7 @@ export class MessageRepository {
 
     const message = await repository.findOne({
       where: { id },
-      relations: { author: true },
+      relations: { author: true, replyToMessage: { author: true } },
     });
 
     return message ? toMessageWithAuthorMapper(message) : null;
@@ -72,6 +72,7 @@ export class MessageRepository {
       ...createMessageDto,
       authorId,
       segNumber,
+      replyToId: createMessageDto.replyToId ?? null,
     });
 
     const message = await repository.save(createdMessage);
