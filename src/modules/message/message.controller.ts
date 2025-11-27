@@ -53,8 +53,8 @@ export class MessageController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: MessageBaseResponseDto })
-  @TransformPlainToInstance(MessageBaseResponseDto)
+  @ApiOkResponse({ type: MessageWithAuthorResponseDto })
+  @TransformPlainToInstance(MessageWithAuthorResponseDto)
   async update(
     @RequestUser() user: ActiveUser,
     @Param('id', ParseIntPipe) id: number,
