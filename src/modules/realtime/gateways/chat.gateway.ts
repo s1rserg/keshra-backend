@@ -34,7 +34,7 @@ import { RealtimeChatPresenceService } from '../services/realtime-chat-presence.
 @WebSocketGateway({
   namespace: 'chat',
   cors: {
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'https://s1rserg.github.io'],
     credentials: true,
   },
 })

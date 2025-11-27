@@ -17,7 +17,10 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  app.enableCors({ credentials: true, origin: 'http://localhost:5173' });
+  app.enableCors({
+    credentials: true,
+    origin: ['http://localhost:5173', 'https://s1rserg.github.io'],
+  });
 
   // URL modifier
   app.setGlobalPrefix('api');
