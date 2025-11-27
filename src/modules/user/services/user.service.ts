@@ -5,6 +5,7 @@ import { Media, UserAvatarService } from '@modules/media';
 
 import type { FileUpload, Nullable } from '@common/types';
 import { DbErrorParser } from '@common/utils/db-error-parser';
+import { isNonEmptyArray } from '@common/utils/non-empty-check';
 import type { MessageApiResponseDto } from '@common/dto/message-api-response.dto';
 
 import type { User, UserWithAvatar } from '../types';
@@ -30,11 +31,18 @@ export class UserService {
     }
   }
 
-  async findAll(query: GetAllUsersQueryDto): Promise<User[]> {
+  async findAll(query: GetAllUsersQueryDto): Promise<UserWithAvatar[]> {
     const users = await this.userRepository.findAll(query);
-    if (!users.length) return users;
 
-    return users;
+    const userIds = users.map((u) => u.id);
+    if (!isNonEmptyArray(userIds)) return [];
+
+    const avatars = await this.userAvatarService.getAvatarsByUserIds(userIds);
+
+    return users.map((user) => ({
+      ...user,
+      avatar: avatars[user.id] || null,
+    }));
   }
 
   async findOne(id: number): Promise<UserWithAvatar> {
