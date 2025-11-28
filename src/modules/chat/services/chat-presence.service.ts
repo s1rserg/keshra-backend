@@ -9,4 +9,8 @@ export class ChatPresenceService {
   async refreshFriendsCache(userId: number, friendIds: number[]) {
     await this.presenceRedis.setFriendsCache(userId, friendIds);
   }
+
+  async addFriendToCache(userId: number, friendId: number): Promise<void> {
+    await this.presenceRedis.addFriendToCache(userId, friendId);
+  }
 }

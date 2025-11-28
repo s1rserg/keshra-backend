@@ -19,6 +19,6 @@ import { ChatGateway } from './gateways/chat.gateway';
     RealtimeChatService,
     RealtimeChatPresenceService,
   ],
-  exports: [RealtimeChatEventsService],
+  exports: [RealtimeChatEventsService, RealtimeChatPresenceService],
 })
 export class RealtimeModule {}

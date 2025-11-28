@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { UserChat } from '@modules/chat';
 import type { MessageWithAuthor } from '@modules/message';
 import { ReactionWithAuthor } from '@modules/reaction';
 
@@ -18,6 +19,22 @@ export class RealtimeChatEventsService {
 
   setServer(server: TypedServer) {
     this.server = server;
+  }
+
+  emitUserOnline(toUserId: number, onlineUserId: number) {
+    this.server
+      .to(`user:${toUserId}`)
+      .emit(ServerToClientEvent.CHAT_PRESENCE_USER_ONLINE, onlineUserId);
+  }
+
+  emitUserOffline(toUserId: number, offlineUserId: number) {
+    this.server
+      .to(`user:${toUserId}`)
+      .emit(ServerToClientEvent.CHAT_PRESENCE_USER_OFFLINE, offlineUserId);
+  }
+
+  emitNewChatToUser(userId: number, chat: UserChat) {
+    this.server.to(`user:${userId}`).emit(ServerToClientEvent.CHAT_NEW, chat);
   }
 
   emitNewMessage(message: MessageWithAuthor) {

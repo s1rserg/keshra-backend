@@ -9,6 +9,7 @@ export enum ClientToServerEvent {
 export enum ServerToClientEvent {
   APP_ERROR = 'app:error',
   CHAT_ERROR = 'chat:error',
+  CHAT_NEW = 'chat:new',
   ME_JOINED_CHAT = 'me:joined:chat',
   ME_LEFT_CHAT = 'me:left:chat',
   CHAT_MESSAGE_NEW = 'chat:message:new',
