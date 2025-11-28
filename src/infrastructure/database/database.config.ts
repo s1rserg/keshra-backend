@@ -13,6 +13,8 @@ export const dbConfig = registerAs<TypeOrmModuleOptions>('database-config', () =
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
 
+    ssl: process.env.APP_ENV !== 'dev',
+
     // Never use schema auto-sync in a migrations-based workflow
     synchronize: true,
     migrationsRun: false,
