@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   type EntityManager,
   FindOneOptions,
+  ILike,
   In,
-  Like,
   Repository,
   type UpdateResult,
 } from 'typeorm';
@@ -36,7 +36,7 @@ export class ChatRepository {
   async searchPublicChatsByTitle(query: string): Promise<PublicChat[]> {
     const chats = await this.chatRepository.find({
       where: {
-        title: Like(`${query}%`),
+        title: ILike(`${query}%`),
         type: ChatType.PUBLIC,
       },
       order: { title: 'ASC' },

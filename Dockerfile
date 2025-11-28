@@ -5,13 +5,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install all dependencies (including dev) to build the app
 RUN npm ci
 
-# Copy source and build
 COPY . .
 RUN npm run build
 
@@ -20,34 +16,20 @@ RUN npm run build
 # ============================
 FROM node:20-alpine
 
-# Install Postgres, Redis, and bash (for the script)
-RUN apk add --no-cache \
-    postgresql \
-    postgresql-contrib \
-    redis \
-    bash \
-    su-exec
+# 1. Install Redis only (and bash/su-exec if you prefer, but not strictly needed for just Redis)
+RUN apk add --no-cache redis bash
 
-# Create the Postgres run directory (required for Alpine)
-RUN mkdir -p /run/postgresql && chown -R postgres:postgres /run/postgresql
-
-# Set working directory
 WORKDIR /app
 
-# Copy package.json for production install
 COPY package*.json ./
-
-# Install only production dependencies
 RUN npm install --omit=dev
 
-# Copy built assets from the Builder stage
 COPY --from=builder /app/dist ./dist
 
-# Expose port
-EXPOSE 3000
-
-# Copy and setup entrypoint
+# 2. Copy the simplified entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 3000
 
 ENTRYPOINT ["docker-entrypoint.sh"]
