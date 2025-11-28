@@ -183,6 +183,8 @@ export class ChatService {
       }),
     );
 
+    await this.presenceService.addFriendToCache(user.id, receiverId);
+
     return {
       ...createdPrivateChat,
       title: await this.getPrivateChatTitle(createdPrivateChat.id, user.id),

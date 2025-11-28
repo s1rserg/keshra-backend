@@ -63,7 +63,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const chatRoom = `chat:${chatId}`;
     await socket.join(chatRoom);
     socket.emit(ServerToClientEvent.ME_JOINED_CHAT, { chatId });
-    this.server.to(chatRoom).emit(ServerToClientEvent.CHAT_PRESENCE_USER_ONLINE, user.id);
   }
 
   @SubscribeMessage(ClientToServerEvent.CHAT_LEAVE)
@@ -74,9 +73,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const chatRoom = `chat:${chatId}`;
     await socket.leave(chatRoom);
     socket.emit(ServerToClientEvent.ME_LEFT_CHAT, chatId);
-    this.server
-      .to(chatRoom)
-      .emit(ServerToClientEvent.CHAT_PRESENCE_USER_OFFLINE, socket.data.user!.id);
   }
 
   @SubscribeMessage(ClientToServerEvent.CHAT_DELTA_JOIN)
@@ -139,15 +135,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       // personal room:
       void socket.join(`user:${activeUser.id}`);
 
-      const { notifyListIds } = await this.presenceService.handleUserConnect(activeUser.id);
-
-      if (notifyListIds.length > 0) {
-        notifyListIds.forEach((friendId) => {
-          this.server
-            .to(`user:${friendId}`)
-            .emit(ServerToClientEvent.CHAT_PRESENCE_USER_ONLINE, activeUser.id);
-        });
-      }
+      await this.presenceService.handleUserConnect(activeUser.id);
     } catch (_error) {
       socket.emit(
         ServerToClientEvent.APP_ERROR,
@@ -160,15 +148,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   async handleDisconnect(socket: TypedSocket) {
     const user = socket.data.user;
     if (user) {
-      const { notifyListIds } = await this.presenceService.handleUserDisconnect(user.id);
-
-      if (notifyListIds.length > 0) {
-        notifyListIds.forEach((friendId) => {
-          this.server
-            .to(`user:${friendId}`)
-            .emit(ServerToClientEvent.CHAT_PRESENCE_USER_OFFLINE, user.id);
-        });
-      }
+      await this.presenceService.handleUserDisconnect(user.id);
     }
     void socket._cleanup();
   }

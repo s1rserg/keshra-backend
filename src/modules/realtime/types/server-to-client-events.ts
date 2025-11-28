@@ -1,3 +1,4 @@
+import { UserChat } from '@modules/chat';
 import type { MessageWithAuthor } from '@modules/message';
 import { ReactionWithAuthor } from '@modules/reaction';
 
@@ -32,6 +33,7 @@ export interface MessageDeletedPayload {
 export interface ServerToClientEvents {
   [ServerToClientEvent.APP_ERROR]: (error: ErrorResponse) => void;
   [ServerToClientEvent.CHAT_ERROR]: (error: ErrorResponse) => void;
+  [ServerToClientEvent.CHAT_NEW]: (chat: UserChat) => void;
   [ServerToClientEvent.ME_JOINED_CHAT]: (payload: MeJoinedChatPayload) => void;
   [ServerToClientEvent.ME_LEFT_CHAT]: (chatId: number) => void;
   [ServerToClientEvent.CHAT_MESSAGE_NEW]: (message: MessageWithAuthor) => void;

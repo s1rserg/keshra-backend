@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
-import { type Chat, OuterChatService } from '@modules/chat';
+import { type Chat, ChatType, OuterChatService, UserChat } from '@modules/chat';
 import { ChatParticipantService } from '@modules/chat-participant';
 import { UserAvatarService } from '@modules/media';
-import { RealtimeChatEventsService } from '@modules/realtime';
+import { RealtimeChatEventsService, RealtimeChatPresenceService } from '@modules/realtime';
 
 import { Nullable } from '@common/types';
 import { isNonEmptyArray } from '@common/utils/non-empty-check';
@@ -29,6 +29,7 @@ export class MessageService {
     private readonly chatParticipantService: ChatParticipantService,
     private readonly dataSource: DataSource,
     private readonly userAvatarService: UserAvatarService,
+    private readonly realtimeChatPresenceService: RealtimeChatPresenceService,
   ) {}
 
   async create(createMessageDto: CreateMessageDto, activeUserId: number): Promise<Message> {
@@ -50,10 +51,19 @@ export class MessageService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
+    let isNewPrivateChat = false;
+
     try {
       const manager = queryRunner.manager;
 
       const chat = await this.chatService.findByIdOrThrow(createMessageDto.chatId, manager);
+
+      if (
+        chat.type === ChatType.DIRECT_MESSAGES &&
+        (chat.lastMessageId === null || chat.lastSegNumber === 0)
+      ) {
+        isNewPrivateChat = true;
+      }
 
       const createdMessage = await this.messageRepository.create(
         createMessageDto,
@@ -102,6 +112,10 @@ export class MessageService {
       // ! transaction end
 
       this.notifyWsNewMessage(messageWithAuthor, lastMessageAuthor, lastMessagePreview);
+
+      if (isNewPrivateChat && chat) {
+        void this.notifyWsNewPrivateChat(chat, messageWithAuthor, activeUserId);
+      }
 
       return createdMessage;
     } catch (_error) {
@@ -255,6 +269,34 @@ export class MessageService {
 
   private getAuthorName({ email, username }: MessageWithAuthor['author']): string {
     return username || email;
+  }
+
+  private async notifyWsNewPrivateChat(
+    chat: Chat,
+    firstMessage: MessageWithAuthor,
+    senderId: number,
+  ) {
+    const participants = await this.chatParticipantService.findChatUsers(chat.id);
+    const receiver = participants.find((p) => p.user.id !== senderId);
+
+    if (!receiver) return;
+
+    const receiverViewOfChat: UserChat = {
+      ...chat,
+      lastMessageId: firstMessage.id,
+      lastMessageAuthorId: firstMessage.authorId,
+      lastMessageAuthor: this.getAuthorName(firstMessage.author),
+      lastMessagePreview: this.buildMessagePreview(firstMessage.content),
+      lastSegNumber: firstMessage.segNumber,
+
+      title: this.getAuthorName(firstMessage.author),
+      avatar: firstMessage.author.avatar || null,
+      unreadCount: 1,
+      partnerUserId: senderId,
+    } as UserChat;
+
+    this.realtimeChatEventsService.emitNewChatToUser(receiver.user.id, receiverViewOfChat);
+    await this.realtimeChatPresenceService.exchangePresence(senderId, receiver.user.id);
   }
 
   private notifyWsNewMessage(
