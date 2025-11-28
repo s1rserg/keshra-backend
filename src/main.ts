@@ -1,4 +1,5 @@
 import { ValidationPipe } from '@nestjs/common';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
@@ -17,10 +18,24 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  app.enableCors({
+  const allowedOrigins = ['http://localhost:5173', 'https://s1rserg.github.io'];
+
+  const corsOptions: CorsOptions = {
     credentials: true,
-    origin: ['http://localhost:5173', 'https://s1rserg.github.io'],
-  });
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS policy blocked origin: ${origin}`), false);
+      }
+    },
+  };
+
+  app.enableCors(corsOptions);
 
   // URL modifier
   app.setGlobalPrefix('api');

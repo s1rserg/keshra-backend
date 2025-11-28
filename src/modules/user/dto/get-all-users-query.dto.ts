@@ -1,12 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsInt, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class GetAllUsersQueryDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   search?: string;
 
   @ApiProperty({ required: false })
