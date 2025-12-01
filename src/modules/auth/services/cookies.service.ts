@@ -6,8 +6,8 @@ export class CookiesService {
   setRefreshTokenCookie(res: Response, refresh_token: string) {
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      sameSite: true,
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      secure: true,
       maxAge: parseInt(process.env.REFRESH_TOKEN_TTL!) * 1000,
     });
   }

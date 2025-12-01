@@ -25,6 +25,7 @@ import {
   WsForbiddenException,
   WsUnauthorizedException,
 } from '../exceptions/ws-exceptions';
+import { CallSignalDto } from '../dto/call-signal.dto';
 import { MarkChatReadDto } from '../dto/mark-chat-read.dto';
 import { RealtimeChatService } from '../services/realtime-chat.service';
 import { RealtimeChatEventsService } from '../services/realtime-chat-events.service';
@@ -151,5 +152,53 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       await this.presenceService.handleUserDisconnect(user.id);
     }
     void socket._cleanup();
+  }
+
+  // Video calls
+
+  @SubscribeMessage(ClientToServerEvent.CALL_OFFER)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  onCallOffer(@ConnectedSocket() socket: TypedSocket, @MessageBody() payload: CallSignalDto) {
+    const user = socket.data.user!;
+
+    socket.to(`user:${payload.partnerId}`).emit(ServerToClientEvent.CALL_MADE, {
+      partnerId: user.id,
+      signal: payload.signal,
+    });
+  }
+
+  @SubscribeMessage(ClientToServerEvent.CALL_ANSWER)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  onCallAnswer(@ConnectedSocket() socket: TypedSocket, @MessageBody() payload: CallSignalDto) {
+    const user = socket.data.user!;
+
+    socket.to(`user:${payload.partnerId}`).emit(ServerToClientEvent.CALL_ANSWERED, {
+      partnerId: user.id,
+      signal: payload.signal,
+    });
+  }
+
+  @SubscribeMessage(ClientToServerEvent.CALL_ICE_CANDIDATE)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  onCallIceCandidate(
+    @ConnectedSocket() socket: TypedSocket,
+    @MessageBody() payload: CallSignalDto,
+  ) {
+    const user = socket.data.user!;
+
+    socket.to(`user:${payload.partnerId}`).emit(ServerToClientEvent.CALL_ICE_CANDIDATE, {
+      partnerId: user.id,
+      signal: payload.signal,
+    });
+  }
+
+  @SubscribeMessage(ClientToServerEvent.CALL_HANGUP)
+  onCallHangup(
+    @ConnectedSocket() socket: TypedSocket,
+    @MessageBody(WsParseIntPipe('Partner Id')) partnerId: number,
+  ) {
+    const user = socket.data.user!;
+
+    socket.to(`user:${partnerId}`).emit(ServerToClientEvent.CALL_ENDED, user.id);
   }
 }

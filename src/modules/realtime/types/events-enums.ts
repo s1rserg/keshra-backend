@@ -4,6 +4,11 @@ export enum ClientToServerEvent {
   CHAT_DELTA_JOIN = 'chat:delta:join',
   CHAT_DELTA_LEAVE = 'chat:delta:leave',
   CHAT_MARK_READ = 'chat:mark:read',
+
+  CALL_OFFER = 'call:offer',
+  CALL_ANSWER = 'call:answer',
+  CALL_ICE_CANDIDATE = 'call:ice-candidate',
+  CALL_HANGUP = 'call:hangup',
 }
 
 export enum ServerToClientEvent {
@@ -21,4 +26,9 @@ export enum ServerToClientEvent {
   CHAT_DELTA_UPDATE = 'chat:delta:update',
   CHAT_PRESENCE_USER_ONLINE = 'chat:presence:user:online',
   CHAT_PRESENCE_USER_OFFLINE = 'chat:presence:user:offline',
+
+  CALL_MADE = 'call:made',
+  CALL_ANSWERED = 'call:answered',
+  CALL_ICE_CANDIDATE = 'call:ice-candidate',
+  CALL_ENDED = 'call:ended',
 }
